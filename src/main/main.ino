@@ -94,9 +94,9 @@ void loop() {  // run over and over
   if(ms5611.isReady()) {
     uint32_t p = ms5611.getPressure();;
     pressure = ((float)p);
-    lowpassFast = lowpassFast + (pressure - lowpassFast) * 10; //0.1F;
-    lowpassSlow = lowpassSlow + (pressure - lowpassSlow) * 2; //0.05F;
-    toneFreq = (lowpassSlow - lowpassFast);// * 50;
+    lowpassFast = lowpassFast + (pressure - lowpassFast) * 0.1F;
+    lowpassSlow = lowpassSlow + (pressure - lowpassSlow) * 0.05F;
+    toneFreq = (lowpassSlow - lowpassFast) * 50;
     toneFreqLowpass = toneFreqLowpass + (toneFreq - toneFreqLowpass) * 0.1;
     toneFreq = calibrate(toneFreqLowpass, -25, -300, 25, 500 );
     ddsAcc += toneFreq * 20 + 400;
@@ -108,8 +108,8 @@ void loop() {  // run over and over
     } else {
       myTone.beep(0);
     }
-    /*Serial.print("PRS ");
-    Serial.println(p, HEX);  */
+    Serial.print("PRS ");
+    Serial.println(p, HEX);
   }
 }
 
