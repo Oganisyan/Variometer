@@ -48,7 +48,7 @@ void  MS5611::orderValue(char code) {
   wire_.beginTransmission(address_);
   wire_.write(code);
   wire_.endTransmission();
-  callOrderTime_ = millis() + 10;
+  callOrderTime_ = millis() + 12;
   callOrderCode_ = code;
 }
 
@@ -62,6 +62,7 @@ uint32_t  MS5611::getValue()
   wire_.endTransmission();
   wire_.beginTransmission(address_);
   wire_.requestFrom((uint8_t)address_, (uint8_t) 0x03);
+  delayMicroseconds(1000);
   
   if(wire_.available() >= 3) {
     ret = ((uint32_t) wire_.read()) << 16 | 
@@ -126,13 +127,8 @@ void MS5611::scaleValues(){
   int32_t T2 = dT/32768 * dT/32768 / 2;
   TEMP = TEMP - T2;
   
-  temperature_ = (float) TEMP/ 100.F;  
-  uint32_t pressure =  ( rawP_ * SENS / 2097152 - OFF) / 32768;
-
-  if(pressureIsOk(pressure)) {
-    pressure_ = pressure;
-  }
-
+  temperature_ = TEMP;  
+  pressure_ =  ( rawP_ * SENS / 2097152 - OFF) / 32768;
 }
 
 
