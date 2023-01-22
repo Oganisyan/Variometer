@@ -5,7 +5,7 @@
 
 
 
-MS5611::MS5611(TwoWire &wire) : wire_(wire), address_(0x77),
+MS5611::MS5611(TwoWire &wire) : wire_(wire), address_(0x76),
   callOrderTime_(millis()+500), callOrderCode_ (0x00)
 {
   for (size_t i=0; i <6;i++)

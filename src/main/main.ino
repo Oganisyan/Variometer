@@ -1,6 +1,7 @@
 #include <Arduino.h>
+#include <Wire.h>
 #include "Tone.h"
-
+#include "Reader.h"
 
 #include "MS5611.h"
 
@@ -25,6 +26,9 @@ int16_t ddsAcc;
 
 MS5611   ms5611(Wire);
 Tone myTone;
+Reader reader(Serial);
+
+
 
 void setup() {
   Serial.begin(57600);
@@ -46,13 +50,14 @@ void setup() {
 
 void loop() {  // run over and over
 
-  if (Serial.available()) {
-    String cmd = Serial.readString();
+  reader.loop();
+  if(reader.hasLine()) {
+    String cmd = reader.getLine();
     if(cmd.startsWith("$BVL ") && cmd.indexOf('*') > 0 ) {
       int value = cmd.substring(5, cmd.indexOf('*')).toInt();
       myTone.setVolume(value);
     }
- }
+  }
   
   ms5611.loop();
   if(ms5611.isReady()) {
