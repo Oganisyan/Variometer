@@ -1,7 +1,7 @@
 # Paragliding Variometer Binary Files
 
  * USB Stick
-   * [AutoRunCE.exe](./AutoRunCE.exe)
+   * [AutoRunCE.exe WinCE executable](./AutoRunCE.exe)
    * [AutoRunCE.ini](./AutoRunCE.ini)
    * [XCSoarData](./XCSoarData)
      * [XCSoar.exe, this is copy from www.xcsoar.org ](./XCSoarData/XCSoar.exe)
