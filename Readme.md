@@ -29,4 +29,9 @@ Prepare the USB stick and insert the device (BikePilot2+).
 |copy [./Firmware/AutoRunCE.ini](./Firmware/AutoRunCE.ini) into root folder from USB stick |
 |copy [./Firmware/XCSoar.exe](./Firmware/XCSoar.exe) or www.xcsoar.org/Downloads into XCSoarData folder from USB stick |
 
+|                                         |                                               |
+|-----------------------------------------|-----------------------------------------------|
+|First  NMEA port / GPS signal|XCSoar gets GPS signal from COM0: (Bikepilot internal GPS).|
+|Second NMEA port / pressure |AutoRunCE blocks serial variometer port (COM4 ) and forwards it to XCSoar via UDP broadcast on port 8882, BlueFly protocol should be used here.|
+
 ## done
