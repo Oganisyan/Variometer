@@ -1,13 +1,11 @@
-# Paragliding Variometer on Basis of Bikepilo2+ or Falk Tiger evo.
+# Paragliding Variometer Binary Files
 
-|                             |                                              |
-|-----------------------------|----------------------------------------------|
-|Video                        |https://youtube.com/shorts/pAdE8dn8gpc        |
-|Vario                        |<img src="./image/Vario.png">                 |
-|XCSoar                       |<img src="./image/XCSoar.png">                |
-|Launcher                     |<img src="./image/Launcher.png">              |
-|Serial Vario for BikePilot2  |<img src="./image/PCB.png">                   |
-|Public folder for Production |https://aisler.net/p/OTGDHGCV                 |
-|Fritzing Project & PCB files |[./ATMega328P-AU/pcb](./ATMega328P-AU/pcb)    |
-|Breakout boards              |<img src="./image/Buzzer2_BrandBoards.png">   |
-|Circuit diagram              |<img src="./image/Buzzer2_CircuitDiagram.png">|
+ * USB Stick
+   * [AutoRunCE.exe](./AutoRunCE.exe)
+   * [AutoRunCE.ini](./AutoRunCE.ini)
+   * [XCSoarData](./XCSoarData)
+     * [XCSoar.exe, this is copy from www.xcsoar.org ](./XCSoarData/XCSoar.exe)
+
+* Firmware
+  * [Firmware without Bootloader HEX](./SerialVariometer.hex)
+  * [Firmware with Bootloader HEX](./SerialVariometer.with_bootloader.hex)
