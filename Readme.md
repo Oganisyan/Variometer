@@ -1,13 +1,32 @@
 # Paragliding Variometer on Basis of Bikepilo2+ or Falk Tiger evo.
-
 |                             |                                              |
 |-----------------------------|----------------------------------------------|
 |Video                        |https://youtube.com/shorts/pAdE8dn8gpc        |
-|Vario                        |<img src="./image/Vario.png">                 |
 |XCSoar                       |<img src="./image/XCSoar.png">                |
 |Launcher                     |<img src="./image/Launcher.png">              |
-|Serial Vario for BikePilot2  |<img src="./image/PCB.png">                   |
-|Public folder for Production |https://aisler.net/p/OTGDHGCV                 |
-|Fritzing Project & PCB files |[./ATMega328P-AU/pcb](./ATMega328P-AU/pcb)    |
-|Breakout boards              |<img src="./image/Buzzer2_BrandBoards.png">   |
-|Circuit diagram              |<img src="./image/Buzzer2_CircuitDiagram.png">|
+
+
+
+## Build Step 1
+build serial variometer and upload firmware
+|                             |                                                                                                   |
+|-----------------------------|---------------------------------------------------------------------------------------------------|
+|Build informations           |[./ATMega328P-AU/Readme.md](./ATMega328P-AU/Readme.md)                                             |
+|Firmware with bootloader     |[./Firmware/SerialVariometer.with_bootloader.hex](./Firmware/SerialVariometer.with_bootloader.hex) |
+|Firmware without bootloader  |[./Firmware/SerialVariometer.hex](./Firmware/SerialVariometer.hex)                                 |
+
+## Build Step 2
+Open the BikePilot2+ and Install Serilal Variometer.
+|                             |                                              |
+|-----------------------------|----------------------------------------------|
+|Vario                        |<img src="./image/Vario.png">                 |
+
+## Build Step 3
+Prepare the USB stick and insert the device (BikePilot2+).
+|                                                                                        |
+|----------------------------------------------------------------------------------------|
+|copy [./Firmware/AutoRunCE.exe](./Firmware/AutoRunCE.exe) into root folder from USB stick |
+|copy [./Firmware/AutoRunCE.ini](./Firmware/AutoRunCE.ini) into root folder from USB stick |
+|copy [./Firmware/XCSoar.exe](./Firmware/XCSoar.exe) or www.xcsoar.org/Downloads into XCSoarData folder from USB stick |
+
+## done
