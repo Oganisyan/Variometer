@@ -3,7 +3,7 @@
 |-----------------------------|----------------------------------------------|
 |Video                        |https://youtube.com/shorts/pAdE8dn8gpc        |
 |XCSoar                       |<img src="./image/XCSoar.png">                |
-|Launcher                     |<img src="./image/Launcher.png">              |
+|AutoRunCE                    |<img src="./image/Launcher.png">              |
 
 
 
