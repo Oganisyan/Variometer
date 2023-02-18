@@ -97,6 +97,10 @@ BOOL CAutoRunCEDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Groﬂes Symbol verwenden
 	SetIcon(m_hIcon, FALSE);		// Kleines Symbol verwenden
 
+	int pos=(int) RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Volume"), 0);
+	log << "Sound: " << pos << std::endl;
+
+
 	mButtonLock.EnableWindow(xcSoarWnd != NULL); 
 	mButtonLock.SetBitMap(IDB_BITMAP_UNLOCK);
 	mButtonRotate.SetBitMap(IDB_BITMAP_ROTATE);
@@ -106,6 +110,7 @@ BOOL CAutoRunCEDlg::OnInitDialog()
 	mButtonXCSoar.SetBitMap(IDB_BITMAP_XCSOAR);
 	mButtonOff.SetBitMap(IDB_BITMAP_OFF);
 	mSliderCtrl.SetRange(0, 9, TRUE);
+	mSliderCtrl.SetPos(pos);
 
 	OnBnClickedButtonXcsoar();
 
@@ -115,6 +120,16 @@ BOOL CAutoRunCEDlg::OnInitDialog()
 
 void CAutoRunCEDlg::OnBnClickedButtonOff()
 {
+	mSliderCtrl.UpdateData(TRUE);
+	int pos = (mSliderCtrl.GetPos() >= sizeof(volCtrlCmds)) ? sizeof(volCtrlCmds)-1 
+		: (mSliderCtrl.GetPos() < 0) ? 0 : mSliderCtrl.GetPos();
+
+	int posReg=(int) RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Volume"), 0);
+
+	if(posReg != pos) {
+		RegWriteDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Volume"), pos);
+	}
+
 	SetSystemPowerState(NULL, POWER_STATE_SUSPEND, POWER_FORCE);
 }
 
@@ -338,7 +353,7 @@ void CAutoRunCEDlg::RegWriteDword(HKEY key, wchar_t *subKey, wchar_t* name, DWOR
 
 void CAutoRunCEDlg::RegWrite(HKEY key, wchar_t *subKey, wchar_t* name, DWORD type, LPBYTE data, DWORD size) {
 		HKEY hKey;			
-		if(ERROR_SUCCESS == RegOpenKeyEx(key,  subKey, 0, KEY_ALL_ACCESS, &hKey)) 
+		if(ERROR_SUCCESS == RegOpenKey(key,  subKey, KEY_ALL_ACCESS, hKey)) 
 		{ 
 			if(ERROR_SUCCESS != RegSetValueEx(hKey, name, 0, type, data, size))
 			{
@@ -346,7 +361,42 @@ void CAutoRunCEDlg::RegWrite(HKEY key, wchar_t *subKey, wchar_t* name, DWORD typ
 			} 
 		 
 			RegCloseKey (hKey); 
-		} else {
-			log << _T("RegOpenKeyEx") << GetLastError() << std::endl;
 		}
+}
+
+DWORD CAutoRunCEDlg::RegReadDword(HKEY key, wchar_t *subKey, wchar_t* name, DWORD defaultValue) {
+	DWORD type=0;
+	DWORD rv=0;
+	DWORD size=sizeof(DWORD);
+	RegRead(key, subKey, name, type, (LPBYTE) &rv, size);
+	return (type == REG_DWORD) && size == sizeof(DWORD) ? rv : defaultValue;
+}
+
+void CAutoRunCEDlg::RegRead(HKEY key, wchar_t *subKey, wchar_t* name, DWORD &type, LPBYTE data, DWORD &size) {
+	HKEY hKey;			
+	if(ERROR_SUCCESS == RegOpenKey(key,  subKey, KEY_ALL_ACCESS, hKey)) 
+	{ 
+		if(ERROR_SUCCESS != RegQueryValueEx(hKey, name, 0, &type, data, &size))
+		{
+			log << _T("RegQueryValueEx: ") << key << _T(" : ") << subKey << _T(" : ")<< GetLastError() << std::endl;
+		} 
+	 
+		RegCloseKey (hKey); 
+	} 
+}
+
+LSTATUS CAutoRunCEDlg::RegOpenKey(HKEY key, wchar_t *subKey, REGSAM mask, HKEY &hKey) {
+	LSTATUS status = RegOpenKeyEx(key,  subKey, 0, mask, &hKey);
+	DWORD error = GetLastError();
+	wchar_t *funcName = _T("RegOpenKeyEx: ");
+	if(status != ERROR_SUCCESS && error == ERROR_RESOURCE_NAME_NOT_FOUND) {
+		DWORD desc;
+		status = RegCreateKeyEx(key, subKey, 0, NULL, REG_OPTION_NON_VOLATILE, mask, NULL, &hKey , &desc);
+		error = GetLastError();
+		funcName = _T("RegCreateKeyEx: ");
+	}
+	if(status != ERROR_SUCCESS) {
+			log << funcName << error << std::endl;
+	}
+	return status;
 }
