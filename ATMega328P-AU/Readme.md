@@ -1,4 +1,12 @@
-# First Step Create Serial Variometer.
+# Serial commands for variometer.
+| Descripton                         | command line   | value type |  value min             | value max            |
+|------------------------------------|----------------|------------|------------------------|----------------------|
+| set volume level                   | $BVL VALUE*    |  INTEGER   |   0    - OFF           | 9   - maximum value  |
+| set clumbling value barrier        | $BUP VALUE*    |  INTEGER   |   0    - 0 m/s         | 400 - 4 m/s          |
+| set sinking value barrier          | $BDW VALUE*    |  INTEGER   |   0    - 0 m/s         | 200 - 2 m/s          |
+| clumbling / sinking simulation     | $BVL VALUE*    |  INTEGER   |   -800 - 8m/s sinking  | 800 - 8m/s clumbling |
+
+# First step create serial variometer.
 
 Before ATMega328P chip is soldered it is very important to upload bootloader for 8MHz internal crystal through SPI interface.
 The firmware can be uploaded with the serial interface, but not the bootloader.

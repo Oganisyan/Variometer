@@ -13,22 +13,50 @@
 //#define TX_PIN            9  // PB1
 #define RESET_PIN           2
 
-
-float calibrate(float freq, float downMin, float downMax, float upMin, float upMax )
-{
-  freq -= constrain(freq, downMin, upMin);
-  return  constrain(freq, downMax, upMax);
-}
+#define EEPROM_ADDRESE_VALUE  0
 
 
-float   toneFreq, toneFreqLowpass, pressure, lowpassFast, lowpassSlow;
+
+float   toneFreqLowpass, pressure, lowpassFast, lowpassSlow, upBarrier, upMax, dwBarrier, dwMax, sim = 0.F;
 int16_t ddsAcc;
-
-
 
 MS5611 ms5611(Wire);
 Tone   myTone;
 Reader reader(Serial);
+
+
+void printBr() {
+  Serial.print("UpBr: ");
+  Serial.print(upBarrier);
+  Serial.print(" UpMax: ");
+  Serial.print(upMax);
+  Serial.print(" DwBr: ");
+  Serial.print(dwBarrier);
+  Serial.print(" DwMax ");
+  Serial.println(dwMax);
+}
+
+// up barrier m/s*100
+void setUpBarrier(int up_100) {
+  up_100 = constrain(up_100, 0, 400);
+  upBarrier=max(25.F, 1.6F*up_100);
+  upMax=upBarrier+600.F;
+}
+// down barrier m/s*100
+void setDownBarrier(int down_100) {
+  down_100 = constrain(down_100, 0, 400);
+  dwBarrier=min(-25.F, -1.6F*down_100);
+  dwMax=dwBarrier-200.F;
+}
+
+float calibrate(float freq)
+{
+  freq = constrain(freq, dwMax, upMax);
+  freq -= constrain(freq, dwBarrier, upBarrier);
+  return  freq;
+}
+
+
 
 void hardwareReset(uint32_t milis) {
   Serial.end();
@@ -44,7 +72,6 @@ void hardwareReset(uint32_t milis) {
 void setup() {
   digitalWrite(RESET_PIN,HIGH);
   Serial.begin(57600);
-  Serial.print("Start");
   ms5611.begin();
   
   while(!ms5611.isReady()) {
@@ -53,12 +80,52 @@ void setup() {
     delay(1000);
   }
 
-  pressure = ((float)ms5611.getPressure());
+  pressure = ((double)ms5611.getPressure());
   lowpassFast = lowpassSlow = pressure;
+  toneFreqLowpass = 0;
   myTone.setVolume(0);
+  setUpBarrier(0);
+  setDownBarrier(0);
   
 
 }
+
+void _loop() {  // run over and over
+  reader.loop();
+  if(reader.hasLine()) {
+    String cmd = reader.getLine();
+    if(cmd.startsWith("$BVL") && cmd.indexOf('*') > 0 ) {
+      int startIndex = 4;
+      while(!isgraph(cmd[startIndex])) startIndex++;
+      int value = cmd.substring(startIndex, cmd.indexOf('*')).toInt();
+      Serial.print("Volume: ");
+      Serial.println(value);
+      myTone.setVolume(value);
+      myTone.beep(100);
+    } else if(cmd.startsWith("$FRQ") && cmd.indexOf('*') > 0 ) {
+      int startIndex = 4;
+      while(!isgraph(cmd[startIndex])) startIndex++;
+      float value = cmd.substring(startIndex, cmd.indexOf('*')).toInt()*1.6F;
+      
+      
+      Serial.print("Freq: ");
+      Serial.println(calibrate(value));
+    } else if(cmd.startsWith("$BUP") && cmd.indexOf('*') > 0 ) {
+      int startIndex = 4;
+      while(!isgraph(cmd[startIndex])) startIndex++;
+      int value = cmd.substring(startIndex, cmd.indexOf('*')).toInt();
+      setUpBarrier(value);
+      printBr();
+    } else if(cmd.startsWith("$BDW") && cmd.indexOf('*') > 0 ) {
+      int startIndex = 4;
+      while(!isgraph(cmd[startIndex])) startIndex++;
+      int value = cmd.substring(startIndex, cmd.indexOf('*')).toInt();
+      setDownBarrier(value);
+      printBr();
+    }
+  }
+}
+
 
 void loop() {  // run over and over
   reader.loop();
@@ -69,28 +136,44 @@ void loop() {  // run over and over
       while(!isgraph(cmd[startIndex])) startIndex++;
       int value = cmd.substring(startIndex, cmd.indexOf('*')).toInt();
       myTone.setVolume(value);
+    } else if(cmd.startsWith("$BUP") && cmd.indexOf('*') > 0 ) {
+      int startIndex = 4;
+      while(!isgraph(cmd[startIndex])) startIndex++;
+      int value = cmd.substring(startIndex, cmd.indexOf('*')).toInt();
+      setUpBarrier(value);
+    } else if(cmd.startsWith("$BDW") && cmd.indexOf('*') > 0 ) {
+      int startIndex = 4;
+      while(!isgraph(cmd[startIndex])) startIndex++;
+      int value = cmd.substring(startIndex, cmd.indexOf('*')).toInt();
+      setDownBarrier(value);
     } else if(cmd.startsWith("$RST") && cmd.indexOf('*') > 0 ) {
       int startIndex = 4;
       while(!isgraph(cmd[startIndex])) startIndex++;
       int value = cmd.substring(startIndex, cmd.indexOf('*')).toInt();
       hardwareReset(value*1000);
+    } else if(cmd.startsWith("$SIM") && cmd.indexOf('*') > 0 ) {
+      int startIndex = 4;
+      while(!isgraph(cmd[startIndex])) startIndex++;
+      sim = cmd.substring(startIndex, cmd.indexOf('*')).toInt()*1.6F;
     }
   }
   
   ms5611.loop();
+
+  
   if(ms5611.isReady()) {
     uint32_t p = ms5611.getPressure();
-    pressure = (float) p;
+    pressure = (double) p;
     lowpassFast = lowpassFast + (pressure - lowpassFast) * 0.1F;
     lowpassSlow = lowpassSlow + (pressure - lowpassSlow) * 0.05F;
-    toneFreq = (lowpassSlow - lowpassFast) * 50.F;
+    float toneFreq = (lowpassSlow - lowpassFast) * 50.F;
     toneFreqLowpass = toneFreqLowpass + (toneFreq - toneFreqLowpass) * 0.1F;
-    toneFreq = calibrate(toneFreqLowpass, -25.F, -300.F, 25.F, 500.F );
+    toneFreq = calibrate(toneFreqLowpass + sim);
     
     ddsAcc += toneFreq * 20 + 400;
 
     if ((toneFreq > 1 && ddsAcc > 0) || (toneFreq < -1))  {
-      myTone.beep(toneFreq + 610);
+      myTone.beep(toneFreq + 400);
     } else {
       myTone.beep(0);
     }
@@ -98,4 +181,5 @@ void loop() {  // run over and over
     Serial.println(p, HEX); 
   }
 }
+
 
