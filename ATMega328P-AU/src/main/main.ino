@@ -84,46 +84,10 @@ void setup() {
   lowpassFast = lowpassSlow = pressure;
   toneFreqLowpass = 0;
   myTone.setVolume(0);
-  setUpBarrier(0);
-  setDownBarrier(0);
+  setUpBarrier(25);
+  setDownBarrier(100);
   
 
-}
-
-void _loop() {  // run over and over
-  reader.loop();
-  if(reader.hasLine()) {
-    String cmd = reader.getLine();
-    if(cmd.startsWith("$BVL") && cmd.indexOf('*') > 0 ) {
-      int startIndex = 4;
-      while(!isgraph(cmd[startIndex])) startIndex++;
-      int value = cmd.substring(startIndex, cmd.indexOf('*')).toInt();
-      Serial.print("Volume: ");
-      Serial.println(value);
-      myTone.setVolume(value);
-      myTone.beep(100);
-    } else if(cmd.startsWith("$FRQ") && cmd.indexOf('*') > 0 ) {
-      int startIndex = 4;
-      while(!isgraph(cmd[startIndex])) startIndex++;
-      float value = cmd.substring(startIndex, cmd.indexOf('*')).toInt()*1.6F;
-      
-      
-      Serial.print("Freq: ");
-      Serial.println(calibrate(value));
-    } else if(cmd.startsWith("$BUP") && cmd.indexOf('*') > 0 ) {
-      int startIndex = 4;
-      while(!isgraph(cmd[startIndex])) startIndex++;
-      int value = cmd.substring(startIndex, cmd.indexOf('*')).toInt();
-      setUpBarrier(value);
-      printBr();
-    } else if(cmd.startsWith("$BDW") && cmd.indexOf('*') > 0 ) {
-      int startIndex = 4;
-      while(!isgraph(cmd[startIndex])) startIndex++;
-      int value = cmd.substring(startIndex, cmd.indexOf('*')).toInt();
-      setDownBarrier(value);
-      printBr();
-    }
-  }
 }
 
 

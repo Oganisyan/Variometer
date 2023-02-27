@@ -3,6 +3,7 @@
 
 #pragma once
 #include "afxwin.h"
+#include "WinReg.h"
 #include "MyButton.h"
 #include "SocketServer.h"
 #include <fstream>
@@ -38,12 +39,14 @@ public:
 // Implementierung
 protected:
 	HICON m_hIcon;
-	MyButton mButtonCancel;
+	MyButton mButtonClose;
 	MyButton mButtonLock;
 	MyButton mButtonBikeNavi;
 	MyButton mButtonXCSoar;
 	MyButton mButtonOff;
 	MyButton mButtonWindows;
+	MyButton mButtonRotate;
+	MyButton mButtonSetup;
 	std::wofstream log;
 	Config cfg_;
 	SocketServer server;
@@ -68,13 +71,6 @@ public:
 	afx_msg void OnBnClickedButtonRotate();
 
 private:
-	void RegWriteString(HKEY key, wchar_t *subKey, wchar_t* name, wchar_t* value);
-	void RegWriteDword(HKEY key, wchar_t *subKey, wchar_t* name, DWORD value);
-	void RegWrite(HKEY key, wchar_t *subKey, wchar_t* name, DWORD type,  LPBYTE data, DWORD size);
-	DWORD RegReadDword(HKEY key, wchar_t *subKey, wchar_t* name, DWORD defaultValue);
-	void RegRead(HKEY key, wchar_t *subKey, wchar_t* name, DWORD &type, LPBYTE data, DWORD &size);
-	LSTATUS RegOpenKey(HKEY key, wchar_t *subKey, REGSAM mask, HKEY &hKey);
-
 	HANDLE hEvent;
 	CWnd *xcSoarWnd;
 	bool bScreanLocked;
@@ -85,5 +81,7 @@ private:
 	HANDLE  GetProcessHandle(LPCWSTR szProcessName);
 	CSliderCtrl mSliderCtrl;
 	DWORD displayOrientation;
-	MyButton mButtonRotate;
+	CWinReg reg;
+public:
+	afx_msg void OnBnClickedButtonVario();
 };

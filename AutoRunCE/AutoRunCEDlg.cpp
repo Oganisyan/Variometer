@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "AutoRunCE.h"
 #include "AutoRunCEDlg.h"
+#include "VarioSettingDlg.h"
 #include <Pm.h>
 #include <TlHelp32.h>
 
@@ -35,6 +36,7 @@ std::vector<std::wstring> volCtrlCmds;
 CAutoRunCEDlg::CAutoRunCEDlg(CWnd* pParent)
 	: CDialog(CAutoRunCEDlg::IDD, pParent), 
 	log(getFileNameFor(LOG).c_str()),
+	reg(log),
 	cfg_(log),
 	bScreanLocked(true), 
 	displayOrientation(DMDO_0),
@@ -58,7 +60,7 @@ CAutoRunCEDlg::CAutoRunCEDlg(CWnd* pParent)
 void CAutoRunCEDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_BUTTON_CANCEL, mButtonCancel);
+	DDX_Control(pDX, IDC_BUTTON_CANCEL, mButtonClose);
 	DDX_Control(pDX, IDC_BUTTON_LOCK, mButtonLock);
 	DDX_Control(pDX, IDC_BUTTON_BIKE_NAVI, mButtonBikeNavi);
 	DDX_Control(pDX, IDC_BUTTON_XCSOAR, mButtonXCSoar);
@@ -66,6 +68,7 @@ void CAutoRunCEDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_BUTTON_WINDOWS, mButtonWindows);
 	DDX_Control(pDX, IDC_SLIDER_SOUND, mSliderCtrl);
 	DDX_Control(pDX, IDC_BUTTON_ROTATE, mButtonRotate);
+	DDX_Control(pDX, IDC_BUTTON_VARIO, mButtonSetup);
 }
 
 BEGIN_MESSAGE_MAP(CAutoRunCEDlg, CDialog)
@@ -83,6 +86,7 @@ ON_BN_CLICKED(IDC_BUTTON_ROTATE, &CAutoRunCEDlg::OnBnClickedButtonRotate)
 ON_WM_ACTIVATE()
 ON_WM_TIMER()
 ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLIDER_SOUND, &CAutoRunCEDlg::OnNMCustomdrawSliderSound)
+ON_BN_CLICKED(IDC_BUTTON_VARIO, &CAutoRunCEDlg::OnBnClickedButtonVario)
 END_MESSAGE_MAP()
 
 
@@ -97,7 +101,7 @@ BOOL CAutoRunCEDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Groﬂes Symbol verwenden
 	SetIcon(m_hIcon, FALSE);		// Kleines Symbol verwenden
 
-	int pos=(int) RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Volume"), 0);
+	int pos=(int) reg.RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Volume"), 0);
 	log << "Sound: " << pos << std::endl;
 
 
@@ -105,10 +109,11 @@ BOOL CAutoRunCEDlg::OnInitDialog()
 	mButtonLock.SetBitMap(IDB_BITMAP_UNLOCK);
 	mButtonRotate.SetBitMap(IDB_BITMAP_ROTATE);
 	mButtonWindows.SetBitMap(IDB_BITMAP_WINDOWS);
-	mButtonCancel.SetBitMap(IDB_BITMAP_CANCEL);
+	mButtonClose.SetBitMap(IDB_BITMAP_SAVE);
 	mButtonBikeNavi.SetBitMap(IDB_BITMAP_NAVI);
 	mButtonXCSoar.SetBitMap(IDB_BITMAP_XCSOAR);
 	mButtonOff.SetBitMap(IDB_BITMAP_OFF);
+	mButtonSetup.SetBitMap(IDB_BITMAP_SETUP);
 	mSliderCtrl.SetRange(0, 9, TRUE);
 	mSliderCtrl.SetPos(pos);
 
@@ -124,10 +129,10 @@ void CAutoRunCEDlg::OnBnClickedButtonOff()
 	int pos = (mSliderCtrl.GetPos() >= sizeof(volCtrlCmds)) ? sizeof(volCtrlCmds)-1 
 		: (mSliderCtrl.GetPos() < 0) ? 0 : mSliderCtrl.GetPos();
 
-	int posReg=(int) RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Volume"), 0);
+	int posReg=(int) reg.RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Volume"), 0);
 
 	if(posReg != pos) {
-		RegWriteDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Volume"), pos);
+		reg.RegWriteDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Volume"), pos);
 	}
 
 	SetSystemPowerState(NULL, POWER_STATE_SUSPEND, POWER_FORCE);
@@ -343,60 +348,11 @@ void CAutoRunCEDlg::OnBnClickedButtonRotate()
 }
 
 
-void CAutoRunCEDlg::RegWriteString(HKEY key, wchar_t *subKey, wchar_t* name, wchar_t* value) {
-	RegWrite(key, subKey, name, REG_SZ, (LPBYTE) value, (wcslen(value)+1)*sizeof(wchar_t));
-}
-
-void CAutoRunCEDlg::RegWriteDword(HKEY key, wchar_t *subKey, wchar_t* name, DWORD value) {
-	RegWrite(key, subKey, name, REG_DWORD, (LPBYTE) &value, sizeof(DWORD));
-}
-
-void CAutoRunCEDlg::RegWrite(HKEY key, wchar_t *subKey, wchar_t* name, DWORD type, LPBYTE data, DWORD size) {
-		HKEY hKey;			
-		if(ERROR_SUCCESS == RegOpenKey(key,  subKey, KEY_ALL_ACCESS, hKey)) 
-		{ 
-			if(ERROR_SUCCESS != RegSetValueEx(hKey, name, 0, type, data, size))
-			{
-				log << _T("RegSetValueEx: ") << GetLastError() << std::endl;
-			} 
-		 
-			RegCloseKey (hKey); 
-		}
-}
-
-DWORD CAutoRunCEDlg::RegReadDword(HKEY key, wchar_t *subKey, wchar_t* name, DWORD defaultValue) {
-	DWORD type=0;
-	DWORD rv=0;
-	DWORD size=sizeof(DWORD);
-	RegRead(key, subKey, name, type, (LPBYTE) &rv, size);
-	return (type == REG_DWORD) && size == sizeof(DWORD) ? rv : defaultValue;
-}
-
-void CAutoRunCEDlg::RegRead(HKEY key, wchar_t *subKey, wchar_t* name, DWORD &type, LPBYTE data, DWORD &size) {
-	HKEY hKey;			
-	if(ERROR_SUCCESS == RegOpenKey(key,  subKey, KEY_ALL_ACCESS, hKey)) 
-	{ 
-		if(ERROR_SUCCESS != RegQueryValueEx(hKey, name, 0, &type, data, &size))
-		{
-			log << _T("RegQueryValueEx: ") << key << _T(" : ") << subKey << _T(" : ")<< GetLastError() << std::endl;
-		} 
-	 
-		RegCloseKey (hKey); 
-	} 
-}
-
-LSTATUS CAutoRunCEDlg::RegOpenKey(HKEY key, wchar_t *subKey, REGSAM mask, HKEY &hKey) {
-	LSTATUS status = RegOpenKeyEx(key,  subKey, 0, mask, &hKey);
-	DWORD error = GetLastError();
-	wchar_t *funcName = _T("RegOpenKeyEx: ");
-	if(status != ERROR_SUCCESS && error == ERROR_RESOURCE_NAME_NOT_FOUND) {
-		DWORD desc;
-		status = RegCreateKeyEx(key, subKey, 0, NULL, REG_OPTION_NON_VOLATILE, mask, NULL, &hKey , &desc);
-		error = GetLastError();
-		funcName = _T("RegCreateKeyEx: ");
-	}
-	if(status != ERROR_SUCCESS) {
-			log << funcName << error << std::endl;
-	}
-	return status;
+void CAutoRunCEDlg::OnBnClickedButtonVario()
+{
+	INT_PTR rc; 
+	ShowWindow(SW_HIDE); 
+	VarioSettingDlg dlg(reg, server);
+	rc = dlg.DoModal();
+	ShowWindow(SW_SHOW); 
 }

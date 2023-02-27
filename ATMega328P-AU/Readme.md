@@ -1,10 +1,10 @@
 # Serial commands for variometer.
-| Descripton                         | command line   | value type |  value min             | value max            |
-|------------------------------------|----------------|------------|------------------------|----------------------|
-| set volume level                   | $BVL VALUE*    |  INTEGER   |   0    - OFF           | 9   - maximum value  |
-| set clumbling value barrier        | $BUP VALUE*    |  INTEGER   |   0    - 0 m/s         | 400 - 4 m/s          |
-| set sinking value barrier          | $BDW VALUE*    |  INTEGER   |   0    - 0 m/s         | 200 - 2 m/s          |
-| clumbling / sinking simulation     | $BVL VALUE*    |  INTEGER   |   -800 - 8m/s sinking  | 800 - 8m/s clumbling |
+| Descripton            | command line   | value type |  value min             | value max        |
+|-----------------------|----------------|------------|------------------------|------------------|
+| set volume level      | $BVL VALUE*    |  INTEGER   |      0 - OFF           |   9 - max value  |
+| set lift threshold    | $BUP VALUE*    |  INTEGER   |      0 - 0 m/s         | 400 - 4 m/s      |
+| set sink threshold    | $BDW VALUE*    |  INTEGER   |      0 - 0 m/s         | 400 - 4 m/s      |
+| lift/sink simulation  | $SIM VALUE*    |  INTEGER   |   -800 - 8m/s sink     | 800 - 8m/s lift  |
 
 # First step create serial variometer.
 

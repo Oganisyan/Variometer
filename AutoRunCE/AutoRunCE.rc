@@ -84,7 +84,23 @@ BEGIN
     CONTROL         "Win",IDC_BUTTON_WINDOWS,"Button",BS_OWNERDRAW | BS_TOP | WS_TABSTOP,8,76,59,14,WS_EX_DLGMODALFRAME
     CONTROL         "",IDC_SLIDER_SOUND,"msctls_trackbar32",TBS_AUTOTICKS | TBS_BOTH | WS_TABSTOP,9,11,121,15
     GROUPBOX        "Vario Sound",IDC_STATIC,9,3,121,24
-    CONTROL         "Rotate",IDC_BUTTON_ROTATE,"Button",BS_OWNERDRAW | BS_TOP | WS_TABSTOP,71,35,59,14,WS_EX_DLGMODALFRAME
+    CONTROL         "Rotate",IDC_BUTTON_ROTATE,"Button",BS_OWNERDRAW | BS_TOP | WS_TABSTOP,71,76,59,14,WS_EX_DLGMODALFRAME
+    CONTROL         "Settings",IDC_BUTTON_VARIO,"Button",BS_OWNERDRAW | BS_TOP | WS_TABSTOP,71,35,59,14,WS_EX_DLGMODALFRAME
+END
+
+IDD_VARIOCONFIG_DIALOG DIALOG  0, 0, 140, 139
+STYLE DS_SETFONT | DS_SETFOREGROUND | DS_FIXEDSYS | WS_VISIBLE | WS_CLIPSIBLINGS
+EXSTYLE WS_EX_CLIENTEDGE | WS_EX_APPWINDOW | 0x80000000L
+FONT 12, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Close",IDC_BUTTON_CANCEL,"Button",BS_OWNERDRAW | BS_BOTTOM | BS_NOTIFY | WS_TABSTOP,71,114,59,14,WS_EX_DLGMODALFRAME
+    CONTROL         "",IDC_SLIDER_UPBARR,"msctls_trackbar32",TBS_AUTOTICKS | TBS_BOTH | WS_TABSTOP,9,11,121,15
+    GROUPBOX        "lift thrushhold (0<=>4 m/s)",IDC_STATIC,9,3,121,27
+    CONTROL         "Save",IDC_BUTTON_SAVE,"Button",BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP,9,114,59,14,WS_EX_DLGMODALFRAME
+    CONTROL         "",IDC_SLIDER_DWBARR,"msctls_trackbar32",TBS_AUTOTICKS | TBS_BOTH | WS_TABSTOP,9,44,121,15
+    GROUPBOX        "sink thrushhold (0<=>4 m/s)",IDC_STATIC,9,36,121,24
+    CONTROL         "",IDC_SLIDER_SOUND,"msctls_trackbar32",TBS_AUTOTICKS | TBS_BOTH | WS_TABSTOP,9,82,121,15
+    GROUPBOX        "lift/sink simulation (-8<=>8 m/s)",IDC_STATIC,9,74,121,24
 END
 
 
@@ -142,6 +158,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 128
     END
+
+    IDD_VARIOCONFIG_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 9
+        RIGHTMARGIN, 130
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 128
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -152,7 +176,7 @@ END
 //
 
 IDB_BITMAP_OFF          BITMAP                  "res\\off.bmp"
-IDB_BITMAP_CANCEL       BITMAP                  "res\\cancel.bmp"
+IDB_BITMAP_CLOSE        BITMAP                  "res\\close.bmp"
 IDB_BITMAP_XCSOAR       BITMAP                  "res\\bt.bmp"
 IDB_BITMAP_LOCK         BITMAP                  "res\\lock.bmp"
 IDB_BITMAP_UNLOCK       BITMAP                  "res\\unlock.bmp"
@@ -160,6 +184,8 @@ IDB_BITMAP_NAVI         BITMAP                  "res\\navi.bmp"
 IDB_BITMAP_WINDOWS      BITMAP                  "res\\bitmapWindows.bmp"
 IDB_BITMAP_SOUND        BITMAP                  "res\\bitmap_c.bmp"
 IDB_BITMAP_ROTATE       BITMAP                  "res\\rotate.bmp"
+IDB_BITMAP_SAVE         BITMAP                  "res\\save.bmp"
+IDB_BITMAP_SETUP        BITMAP                  "res\\setup.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //

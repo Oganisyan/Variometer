@@ -2214,6 +2214,14 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\VarioSettingDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\WinReg.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -2248,6 +2256,14 @@
 				RelativePath=".\stdafx.h"
 				>
 			</File>
+			<File
+				RelativePath=".\VarioSettingDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\WinReg.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -2260,6 +2276,14 @@
 			</File>
 			<File
 				RelativePath=".\AutoRunCE.rc"
+				>
+			</File>
+			<File
+				RelativePath=".\res\back.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\bitmap1.bmp"
 				>
 			</File>
 			<File
@@ -2279,6 +2303,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\res\close.bmp"
+				>
+			</File>
+			<File
 				RelativePath=".\res\lock.bmp"
 				>
 			</File>
@@ -2292,6 +2320,14 @@
 			</File>
 			<File
 				RelativePath=".\res\rotate.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\save.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\setup.bmp"
 				>
 			</File>
 			<File
