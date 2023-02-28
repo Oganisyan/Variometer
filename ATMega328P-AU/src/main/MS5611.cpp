@@ -5,7 +5,7 @@
 
 
 
-MS5611::MS5611(TwoWire &wire) : wire_(wire), address_(0x76),
+MS5611::MS5611(TwoWire &wire) : wire_(wire), address_(0),
   callOrderTime_(millis()+500), callOrderCode_ (0x00)
 {
   for (size_t i=0; i <6;i++)
@@ -23,6 +23,20 @@ bool MS5611::isReady() {
     
 void MS5611::begin()
 {
+  address_ = 0x76;
+  wire_.beginTransmission(address_);
+  if(wire_.endTransmission() != 0) {
+    address_ = 0x77;
+    wire_.beginTransmission(address_);
+    if(wire_.endTransmission() != 0) {
+      Serial.println("Addres for MS5611 not found!");
+      return;
+    }
+    Serial.println("MS5611 on  0x77!");
+  } else {
+    Serial.println("MS5611 on  0x76!");
+  }
+
 
   wire_.beginTransmission(address_);
   wire_.write(0x1E); // reset
