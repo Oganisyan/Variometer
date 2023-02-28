@@ -2311,11 +2311,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\res\minus.bmp"
+				>
+			</File>
+			<File
 				RelativePath=".\res\navi.bmp"
 				>
 			</File>
 			<File
 				RelativePath=".\res\off.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\plus.bmp"
 				>
 			</File>
 			<File

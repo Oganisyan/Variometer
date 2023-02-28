@@ -60,7 +60,7 @@ CAutoRunCEDlg::CAutoRunCEDlg(CWnd* pParent)
 void CAutoRunCEDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_BUTTON_CANCEL, mButtonClose);
+	DDX_Control(pDX, IDC_BUTTON_CLOSE, mButtonClose);
 	DDX_Control(pDX, IDC_BUTTON_LOCK, mButtonLock);
 	DDX_Control(pDX, IDC_BUTTON_BIKE_NAVI, mButtonBikeNavi);
 	DDX_Control(pDX, IDC_BUTTON_XCSOAR, mButtonXCSoar);
@@ -81,7 +81,7 @@ ON_BN_CLICKED(IDC_BUTTON_BIKE_NAVI, &CAutoRunCEDlg::OnBnClickedButtonBikeNavi)
 ON_BN_CLICKED(IDC_BUTTON_XCSOAR, &CAutoRunCEDlg::OnBnClickedButtonXcsoar)
 ON_BN_CLICKED(IDC_BUTTON_WINDOWS, &CAutoRunCEDlg::OnBnClickedButtonWindows)
 ON_BN_CLICKED(IDC_BUTTON_OFF, &CAutoRunCEDlg::OnBnClickedButtonOff)
-ON_BN_CLICKED(IDC_BUTTON_CANCEL, &CAutoRunCEDlg::OnBnClickedCancel)
+ON_BN_CLICKED(IDC_BUTTON_CLOSE, &CAutoRunCEDlg::OnBnClickedCancel)
 ON_BN_CLICKED(IDC_BUTTON_ROTATE, &CAutoRunCEDlg::OnBnClickedButtonRotate)
 ON_WM_ACTIVATE()
 ON_WM_TIMER()
@@ -109,7 +109,7 @@ BOOL CAutoRunCEDlg::OnInitDialog()
 	mButtonLock.SetBitMap(IDB_BITMAP_UNLOCK);
 	mButtonRotate.SetBitMap(IDB_BITMAP_ROTATE);
 	mButtonWindows.SetBitMap(IDB_BITMAP_WINDOWS);
-	mButtonClose.SetBitMap(IDB_BITMAP_SAVE);
+	mButtonClose.SetBitMap(IDB_BITMAP_CLOSE);
 	mButtonBikeNavi.SetBitMap(IDB_BITMAP_NAVI);
 	mButtonXCSoar.SetBitMap(IDB_BITMAP_XCSOAR);
 	mButtonOff.SetBitMap(IDB_BITMAP_OFF);
@@ -354,5 +354,4 @@ void CAutoRunCEDlg::OnBnClickedButtonVario()
 	ShowWindow(SW_HIDE); 
 	VarioSettingDlg dlg(reg, server);
 	rc = dlg.DoModal();
-	ShowWindow(SW_SHOW); 
 }

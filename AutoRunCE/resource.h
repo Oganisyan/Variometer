@@ -17,9 +17,12 @@
 #define IDB_BITMAP_ROTATE               148
 #define IDB_BITMAP_SAVE                 149
 #define IDB_BITMAP_SETUP                151
-#define IDC_BUTTON_CANCEL               1000
+#define IDB_BITMAP_PLUS                 152
+#define IDB_BITMAP_MINUS                153
 #define IDC_BUTTON_BIKE_NAVI            1001
+#define IDC_BUTTON_MM                   1001
 #define IDC_BUTTON_XCSOAR               1002
+#define IDC_BUTTON_PP                   1002
 #define IDC_BUTTON_LOCK                 1003
 #define IDC_BUTTON_OFF                  1004
 #define IDC_BUTTON_WINDOWS              1005
@@ -29,14 +32,15 @@
 #define IDC_BUTTON_SAVE                 1009
 #define IDC_SLIDER_DWBARR               1010
 #define IDC_SLIDER_UPBARR               1011
+#define IDC_BUTTON_CLOSE                1015
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        152
+#define _APS_NEXT_RESOURCE_VALUE        153
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1012
+#define _APS_NEXT_CONTROL_VALUE         1016
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

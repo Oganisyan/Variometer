@@ -29,9 +29,12 @@ protected:
 	virtual BOOL OnInitDialog();
 	MyButton mButtonClose;
 	MyButton mButtonSave;
+	MyButton mButtonMinus;
+	MyButton mButtonPlus;
 
 	DECLARE_MESSAGE_MAP()
 public:
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnBnClickedButtonSave();
 	afx_msg void OnBnClickedButtonCancel();
 	afx_msg void OnNMCustomdrawSliderSound(NMHDR *pNMHDR, LRESULT *pResult);
@@ -40,4 +43,6 @@ public:
 	CSliderCtrl mSliderLiftCtrl;
 	CSliderCtrl mSliderSinkCtrl;
 	CSliderCtrl mSliderSimCtrl;
+	afx_msg void OnBnClickedButtonMm();
+	afx_msg void OnBnClickedButtonPp();
 };
