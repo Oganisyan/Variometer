@@ -134,6 +134,7 @@ void CAutoRunCEDlg::OnBnClickedButtonOff()
 	if(posReg != pos) {
 		reg.RegWriteDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Volume"), pos);
 	}
+	SendSerial(volCtrlCmds[0]);
 
 	SetSystemPowerState(NULL, POWER_STATE_SUSPEND, POWER_FORCE);
 }
@@ -299,6 +300,15 @@ void CAutoRunCEDlg::OnBnClickedButtonWindows()
 
 }
 
+void CAutoRunCEDlg::SendSerial(const std::wstring &wsCmd)
+{
+	std::string cmd;
+	cmd.resize(wsCmd.size() * sizeof(wchar_t) / sizeof(char) + 2);
+	int len = wcstombs(&cmd[0], wsCmd.c_str(), wsCmd.size() * sizeof(wchar_t) / sizeof(char));
+	cmd[len++] = '\r';
+	cmd[len++] = '\n';
+	server.serialSend(cmd.c_str(), len);
+}
 
 void CAutoRunCEDlg::OnNMCustomdrawSliderSound(NMHDR *pNMHDR, LRESULT *pResult)
 {
@@ -306,15 +316,7 @@ void CAutoRunCEDlg::OnNMCustomdrawSliderSound(NMHDR *pNMHDR, LRESULT *pResult)
 	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
 	int pos = (mSliderCtrl.GetPos() >= sizeof(volCtrlCmds)) ? sizeof(volCtrlCmds)-1 
 		: (mSliderCtrl.GetPos() < 0) ? 0 : mSliderCtrl.GetPos();
-
-
-	std::string cmd;
-	cmd.resize(volCtrlCmds[pos].size() * sizeof(wchar_t) / sizeof(char) + 2);
-	int len = wcstombs(&cmd[0],volCtrlCmds[pos].c_str(), volCtrlCmds[pos].size() * sizeof(wchar_t) / sizeof(char));
-	cmd[len++] = '\r';
-	cmd[len++] = '\n';
-
-	server.serialSend(cmd.c_str(), len);
+	SendSerial(volCtrlCmds[pos]);
 	*pResult = 0;
 }
 

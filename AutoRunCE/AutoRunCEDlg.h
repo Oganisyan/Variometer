@@ -71,6 +71,7 @@ public:
 	afx_msg void OnBnClickedButtonRotate();
 
 private:
+	void SendSerial(const std::wstring &wsCmd);
 	HANDLE hEvent;
 	CWnd *xcSoarWnd;
 	bool bScreanLocked;
