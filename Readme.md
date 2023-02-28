@@ -1,9 +1,8 @@
 # Paragliding Variometer on Basis of Bikepilo2+ or Falk Tiger evo.
-|                             |                                              |
-|-----------------------------|----------------------------------------------|
-|Video                        |https://youtube.com/shorts/pAdE8dn8gpc        |
-|XCSoar                       |<img src="./image/XCSoar.png">                |
-|AutoRunCE                    |<img src="./image/Launcher.png">              |
+|                |          XCSoar                         |    AutoRunCE Main Dialog          |    AutoRunCE Vario Settings       |
+|----------------|-----------------------------------------|-----------------------------------|-----------------------------------|
+|Video           |https://youtube.com/shorts/pAdE8dn8gpc   |                                   |                                   | 
+|AutoRunCE       |<img src="./image/AutoRunCE_1.png">      |<img src="./image/AutoRunCE_2.png">|<img src="./image/AutoRunCE_3.png">|
 
 
 
