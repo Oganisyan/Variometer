@@ -2,7 +2,7 @@
 |      |          XCSoar                      |    AutoRunCE Main Dialog             |    AutoRunCE Vario Settings          |
 |------|--------------------------------------|--------------------------------------|--------------------------------------|
 |Videos|https://youtube.com/shorts/pAdE8dn8gpc|https://youtube.com/shorts/2ggxs6w_VHQ|https://youtube.com/shorts/l3dTKEIAxWs|
-|Photos|<img src="./image/AutoRunCE_1.png">   |<img src="./image/AutoRunCE_2.png">   |<img src="./image/AutoRunCE_3.png">   |
+|Photos|[<img src="./image/AutoRunCE_1.png">](https://www.youtube.com/watch?v=pAdE8dn8gpc)  |<img src="./image/AutoRunCE_2.png">   |<img src="./image/AutoRunCE_3.png">   |
 
 ## Build Step 1
 build serial variometer and upload firmware
