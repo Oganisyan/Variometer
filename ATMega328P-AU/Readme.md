@@ -5,7 +5,7 @@
 | set lift threshold    | $BUP VALUE*    |  INTEGER   |      0 - 0 m/s         | 400 - 4 m/s              |
 | set sink threshold    | $BDW VALUE*    |  INTEGER   |      0 - 0 m/s         | 400 - 4 m/s              |
 | lift/sink simulation  | $SIM VALUE*    |  INTEGER   |   -800 - 8m/s sink     | 800 - 8m/s lift          |
-| reboot                | $RST VALUE*    |  INTEGER   |      0 - reboot now    |   x - rebbot in x seconds| 
+| reboot                | $RST VALUE*    |  INTEGER   |      0 - reboot now    |   x - reboot in x seconds| 
 
 # First step create serial variometer.
 
