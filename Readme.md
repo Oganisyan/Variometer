@@ -13,9 +13,9 @@ build serial variometer and upload firmware
 
 ## Build Step 2
 Open the BikePilot2+ and Install Serilal Variometer.
-|                             |                                              |
-|-----------------------------|----------------------------------------------|
-|Vario                        |<img src="./image/Vario.png">                 |
+|                 Assembly                     |
+|----------------------------------------------|
+|<img src="./image/Vario.png">                 |
 
 ## Build Step 3
 Prepare the USB stick and insert the device (BikePilot2+).
