@@ -134,15 +134,16 @@ void loop() {  // run over and over
     toneFreqLowpass = toneFreqLowpass + (toneFreq - toneFreqLowpass) * 0.1F;
     toneFreq = calibrate(toneFreqLowpass + sim);
     
-    ddsAcc += toneFreq * 20 + 400;
+    ddsAcc += toneFreq * 10 + 1000;
 
-    if ((toneFreq > 1 && ddsAcc > 0) || (toneFreq < -1))  {
-      myTone.beep(toneFreq + 400);
+    if ((toneFreq > 1.F && ddsAcc > 0) || (toneFreq < -1.F))  {
+      toneFreq += 500;
+      myTone.beep(toneFreq);
     } else {
       myTone.beep(0);
     }
     Serial.print("PRS ");
-    Serial.println(p, HEX); 
+    Serial.println(p, HEX);
   }
 }
 
