@@ -5,7 +5,7 @@
 #include <string>
 
 
-SocketServer::SocketServer(Config &cfg, std::wofstream &pLog) : cfg_(cfg), log(pLog) {
+SocketServer::SocketServer(Config &cfg, std::wofstream &pLog) : cfg_(cfg), log(pLog), hComm(INVALID_HANDLE_VALUE) {
 	udpPort_ = _wtoi(CFG(cfg_, UDP_PORT).c_str());
 	sensorPort_ = CFG(cfg_, SENSOR_PORT);
 	bitRate_ = _wtoi(CFG(cfg_, SENSOR_PORT_RATE).c_str());
@@ -25,7 +25,6 @@ SocketServer::SocketServer(Config &cfg, std::wofstream &pLog) : cfg_(cfg), log(p
 	int broadcast=1;
 	std::string recv;
 	setsockopt(socket_, SOL_SOCKET, SO_BROADCAST, (const char *) &broadcast, sizeof(broadcast));
-	initSerialPort();
 	CreateThread( NULL, 0, SocketServer::loop, this, 0, NULL);  
 
 
@@ -34,17 +33,8 @@ SocketServer::~SocketServer(void)
 {
 }
 
-void SocketServer::send2Client(const char *data, int len) {
-	sockaddr_in addr;
-	addr.sin_family = AF_INET;
-    addr.sin_port = htons(udpPort_);
-    addr.sin_addr.s_addr = inet_addr("127.255.255.255");
-	if(sendto(socket_, data, len, 0, (const sockaddr *)&addr, sizeof(addr)) < 0) {
-		log << "Can't sendto socket: " << GetLastError() << std::endl;
-	}
-}
-
-void SocketServer::initSerialPort() {
+void SocketServer::OpenSerialPort() {
+	CloseSerialPort();
 	hComm = CreateFile(sensorPort_.c_str(),
 				GENERIC_READ | GENERIC_WRITE, 
 				FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -61,8 +51,7 @@ void SocketServer::initSerialPort() {
 	dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
 	if (GetCommState(hComm, &dcbSerialParams) == FALSE ) {
 		log << "GetCommState  error code: " << GetLastError()  << std::endl;
-		CloseHandle(hComm);
-		hComm = INVALID_HANDLE_VALUE;
+		CloseSerialPort();
 		return;
 	}
 	dcbSerialParams.BaudRate = bitRate_;      //BaudRate = 9600
@@ -74,8 +63,7 @@ void SocketServer::initSerialPort() {
 
 	if (SetCommState(hComm, &dcbSerialParams) == FALSE ) {
 		log << "SetCommState  error code: " << GetLastError()  << std::endl;
-		CloseHandle(hComm);
-		hComm = INVALID_HANDLE_VALUE;
+		CloseSerialPort();
 		return;
 	}
 
@@ -98,11 +86,17 @@ void SocketServer::initSerialPort() {
 	// set the time-out parameter into device control.
 	if(!SetCommTimeouts(hComm,&comTimeOut)){
 		log << "SetCommTimeouts error code: " << GetLastError()  << std::endl;
-		CloseHandle(hComm);
-		hComm = INVALID_HANDLE_VALUE;
+		CloseSerialPort();
 		return;
 	}
 	memset(&ov, 0, sizeof(ov));
+}
+
+void SocketServer::CloseSerialPort() {
+	if(hComm != INVALID_HANDLE_VALUE) {
+		CloseHandle(hComm);
+		hComm = INVALID_HANDLE_VALUE;
+	}
 }
 
 
@@ -114,17 +108,45 @@ void SocketServer::serialSend(const char *data, int data_len)
 	}
 };
 
+void SocketServer::broadcast(const char *data, int len) {
+	sockaddr_in addr;
+	addr.sin_family = AF_INET;
+    addr.sin_port = htons(udpPort_);
+    addr.sin_addr.s_addr = inet_addr("127.255.255.255");
+	if(sendto(socket_, data, len, 0, (const sockaddr *)&addr, sizeof(addr)) < 0) {
+		log << "Can't sendto socket: " << GetLastError() << std::endl;
+	}
+}
+
 
 DWORD WINAPI SocketServer::loop( LPVOID lpParam ) 
 {
 	SocketServer *myThis = (SocketServer *) lpParam;
+	DWORD pos=0;
+	char cBuffer[128] = "\0";
 	for(;;) {
-		char cBuffer[128] = "\0";
-		DWORD dwSize = 128, dwRead = 0;
-		if(!ReadFile(myThis->hComm, &cBuffer, dwSize, &dwRead, NULL)) {
-			myThis->log << 	_T("Error ReadFile: ") << GetLastError() << std::endl;
+		if(myThis->hComm != INVALID_HANDLE_VALUE) {
+			DWORD dwSize = sizeof(cBuffer) - pos - 1;
+			DWORD dwRead = 0;
+			if(!ReadFile(myThis->hComm, &cBuffer[0] + pos, dwSize, &dwRead, NULL)) {
+				myThis->log << 	_T("Error ReadFile: ") << GetLastError() << std::endl;
+			} else {
+				dwRead+=pos;
+				cBuffer[dwRead] = 0;
+				char *start=cBuffer;
+				char *end;
+				while((end=strchr(start, '\n')) != NULL ) {
+					myThis->broadcast(start, ++end-start);
+					myThis->log << start << std::endl;
+					start = end;
+				}
+				if(start != cBuffer)
+					strcpy(cBuffer, start);
+				pos = dwRead - (start-cBuffer);
+				myThis->log << cBuffer << _T(": ") << pos << std::endl;
+			}
 		} else {
-			myThis->send2Client(cBuffer, dwRead);
+			Sleep(100);
 		}
 	}
     return 0; 

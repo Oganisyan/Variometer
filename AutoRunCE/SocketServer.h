@@ -16,11 +16,12 @@ class SocketServer
 	OVERLAPPED ov;
 	Config &cfg_;
 
-	void initSerialPort();
-	void send2Client(const char *data, int data_len);
+	void broadcast(const char *data, int data_len);
 public:
 	SocketServer(Config &cfg, std::wofstream &pLog);
 	~SocketServer(void);
 	void serialSend(const char *data, int data_len);
+	void OpenSerialPort();
+	void CloseSerialPort();
 
 };

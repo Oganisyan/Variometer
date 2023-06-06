@@ -273,6 +273,8 @@ HANDLE  CAutoRunCEDlg::GetProcessHandle(LPCWSTR szProcessName)
 void CAutoRunCEDlg::OnBnClickedButtonBikeNavi()
 {
 	TerminateProcess(hChildProcess, 0);
+
+	server.CloseSerialPort();
 	hChildProcess = CreateProcess(CFG(cfg_, BIKE_NAV_PATH).c_str());
 	mButtonBikeNavi.EnableWindow(FALSE);
 	mButtonXCSoar.EnableWindow(TRUE);
@@ -284,6 +286,8 @@ void CAutoRunCEDlg::OnBnClickedButtonBikeNavi()
 void CAutoRunCEDlg::OnBnClickedButtonXcsoar()
 {
 	TerminateProcess(hChildProcess, 0);
+
+	server.OpenSerialPort();
 	hChildProcess = CreateProcess(CFG(cfg_, XC_SOAR_PATH).c_str());
 	mButtonBikeNavi.EnableWindow(TRUE);
 	mButtonXCSoar.EnableWindow(FALSE);
@@ -293,6 +297,8 @@ void CAutoRunCEDlg::OnBnClickedButtonXcsoar()
 void CAutoRunCEDlg::OnBnClickedButtonWindows()
 {
 	TerminateProcess(hChildProcess, 0);
+
+	server.CloseSerialPort();
 	hChildProcess = CreateProcess(CFG(cfg_, WIN_EXPLORER_PATH).c_str());
 	mButtonBikeNavi.EnableWindow(TRUE);
 	mButtonXCSoar.EnableWindow(TRUE);
@@ -323,7 +329,7 @@ void CAutoRunCEDlg::OnNMCustomdrawSliderSound(NMHDR *pNMHDR, LRESULT *pResult)
 
 void CAutoRunCEDlg::OnBnClickedButtonRotate()
 {
-
+#if 1
 	CRect rc;
 	GetWindowRect(&rc); // getting dialog coordinates
 
@@ -347,6 +353,23 @@ void CAutoRunCEDlg::OnBnClickedButtonRotate()
 	}
 
 	MoveWindow(rc.top, rc.left, rc.Width(), rc.Height());
+#else 
+	HKEY hKey;
+	if(ERROR_SUCCESS==RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Drivers\\BuiltIn\\BackLight"),0,0,&hKey))
+    {
+		DWORD dwBklLevel = 100;
+       	RegSetValueEx(hKey, _T("Brightness"),0,REG_DWORD,(BYTE*)&dwBklLevel,sizeof(DWORD));
+		dwBklLevel = 50;
+       	RegSetValueEx(hKey, _T("CurrentDx"),0,REG_DWORD,(BYTE*)&dwBklLevel,sizeof(DWORD));
+		RegCloseKey(hKey);
+		HANDLE hBL=CreateEvent(NULL,FALSE,FALSE, _T("EventModify"));
+		if(hBL)
+		{
+			SetEvent(hBL);
+			CloseHandle(hBL);
+		}
+	}
+#endif
 }
 
 
