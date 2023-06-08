@@ -90,7 +90,6 @@ void setup() {
 
 }
 
-
 void loop() {  // run over and over
   reader.loop();
   if(reader.hasLine()) {
@@ -144,6 +143,7 @@ void loop() {  // run over and over
     }
     Serial.print("PRS ");
     Serial.println(p, HEX);
+    Serial.flush();
   }
 }
 
