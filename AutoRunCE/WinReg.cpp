@@ -44,7 +44,7 @@ void CWinReg::RegRead(HKEY key, wchar_t *subKey, wchar_t* name, DWORD &type, LPB
 	{ 
 		if(ERROR_SUCCESS != RegQueryValueEx(hKey, name, 0, &type, data, &size))
 		{
-			log << _T("RegQueryValueEx: ") << key << _T(" : ") << subKey << _T(" : ")<< GetLastError() << std::endl;
+			log << _T("RegQueryValueEx: ") << key << _T(" : ") << name << _T(" : ")<< GetLastError() << std::endl;
 		} 
 	 
 		RegCloseKey (hKey); 

@@ -17,13 +17,22 @@
 
 
 
-float   toneFreqLowpass, pressure, lowpassFast, lowpassSlow, upBarrier, upMax, dwBarrier, dwMax, sim = 0.F;
+float   toneFreqLowpass, pressure, lowpassFast, lowpassSlow, upBarrier, upMax, dwBarrier, dwMax, sim = 0.F, P1, P2, P3, P4;
+
 int16_t ddsAcc;
 
 MS5611 ms5611(Wire);
 Tone   myTone;
 Reader reader(Serial);
 
+
+void sensitivity (int p) {
+  p =  constrain(p, 0, 5); 
+  P1 = (5.F+ p)/50;
+  P2 = P1 / 2;
+  P3 = 500.F * P1;
+  P4 = P3 * P1;
+}
 
 void printBr() {
   Serial.print("UpBr: ");
@@ -69,11 +78,17 @@ void hardwareReset(uint32_t milis) {
   digitalWrite(RESET_PIN,LOW);
 }
 
+void sendPressure(uint32_t p) {
+  static char buffer[32];
+  int len = sprintf(buffer, "PRS %lX\n", p);
+  Serial.write(buffer, len);
+}
+
 void setup() {
   digitalWrite(RESET_PIN,HIGH);
   Serial.begin(57600);
   ms5611.begin();
-  
+  sensitivity(3);
   while(!ms5611.isReady()) {
     ms5611.loop();
     Serial.print(".");
@@ -114,6 +129,11 @@ void loop() {  // run over and over
       while(!isgraph(cmd[startIndex])) startIndex++;
       int value = cmd.substring(startIndex, cmd.indexOf('*')).toInt();
       hardwareReset(value*1000);
+    } else if(cmd.startsWith("$SEN") && cmd.indexOf('*') > 0 ) {
+      int startIndex = 4;
+      while(!isgraph(cmd[startIndex])) startIndex++;
+      int value = cmd.substring(startIndex, cmd.indexOf('*')).toInt();
+      sensitivity(value);
     } else if(cmd.startsWith("$SIM") && cmd.indexOf('*') > 0 ) {
       int startIndex = 4;
       while(!isgraph(cmd[startIndex])) startIndex++;
@@ -127,23 +147,22 @@ void loop() {  // run over and over
   if(ms5611.isReady()) {
     uint32_t p = ms5611.getPressure();
     pressure = (double) p;
-    lowpassFast = lowpassFast + (pressure - lowpassFast) * 0.1F;
-    lowpassSlow = lowpassSlow + (pressure - lowpassSlow) * 0.05F;
-    float toneFreq = (lowpassSlow - lowpassFast) * 50.F;
-    toneFreqLowpass = toneFreqLowpass + (toneFreq - toneFreqLowpass) * 0.1F;
+        
+    lowpassFast = lowpassFast + (pressure - lowpassFast) * P1;
+    lowpassSlow = lowpassSlow + (pressure - lowpassSlow) * P2;
+    float toneFreq = (lowpassSlow - lowpassFast) * P3;
+    toneFreqLowpass = toneFreqLowpass + (toneFreq - toneFreqLowpass) * P1;
     toneFreq = calibrate(toneFreqLowpass + sim);
     
     ddsAcc += toneFreq * 10 + 1000;
 
-    if ((toneFreq > 1.F && ddsAcc > 0) || (toneFreq < -1.F))  {
-      toneFreq += 500;
+    if ((toneFreq > P4 && ddsAcc > 0) || (toneFreq < -P4))  {
+      toneFreq += toneFreq > 0 ? 550 : 450;
       myTone.beep(toneFreq);
     } else {
       myTone.beep(0);
     }
-    Serial.print("PRS ");
-    Serial.println(p, HEX);
-    Serial.flush();
+    sendPressure(p);
   }
 }
 

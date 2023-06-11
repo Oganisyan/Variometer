@@ -61,8 +61,23 @@ void SocketServer::OpenSerialPort() {
 	dcbSerialParams.fOutxCtsFlow = FALSE;
 	dcbSerialParams.fOutxDsrFlow = FALSE;
 
+
 	if (SetCommState(hComm, &dcbSerialParams) == FALSE ) {
 		log << "SetCommState  error code: " << GetLastError()  << std::endl;
+		CloseSerialPort();
+		return;
+	}
+
+	COMMTIMEOUTS timeouts = {
+		5,  // ReadIntervalTimeout;         (Maximum time between read chars.)
+		0,  // ReadTotalTimeoutMultiplier;  (Multiplier of characters.)
+		20, // ReadTotalTimeoutConstant;    (Constant in milliseconds.)
+		0,  // WriteTotalTimeoutMultiplier; (Multiplier of characters.)
+		0   // WriteTotalTimeoutConstant;   (Constant in milliseconds.)
+	};
+
+	if(SetCommTimeouts(hComm, &timeouts) == FALSE ) {
+		log << "SetCommTimeouts  error code: " << GetLastError()  << std::endl;
 		CloseSerialPort();
 		return;
 	}
@@ -123,7 +138,8 @@ DWORD WINAPI SocketServer::loop( LPVOID lpParam )
 {
 	SocketServer *myThis = (SocketServer *) lpParam;
 	DWORD pos=0;
-	char cBuffer[128] = "\0";
+	char cBuffer[129]; 
+	cBuffer[129]= '\0';
 	for(;;) {
 		if(myThis->hComm != INVALID_HANDLE_VALUE) {
 			DWORD dwSize = sizeof(cBuffer) - pos - 1;
@@ -131,19 +147,25 @@ DWORD WINAPI SocketServer::loop( LPVOID lpParam )
 			if(!ReadFile(myThis->hComm, &cBuffer[0] + pos, dwSize, &dwRead, NULL)) {
 				myThis->log << 	_T("Error ReadFile: ") << GetLastError() << std::endl;
 			} else {
+				if(dwRead == 0) {
+					Sleep(1);
+					continue;
+				}
 				dwRead+=pos;
 				cBuffer[dwRead] = 0;
 				char *start=cBuffer;
 				char *end;
 				while((end=strchr(start, '\n')) != NULL ) {
-					myThis->broadcast(start, ++end-start);
-					myThis->log << start << std::endl;
-					start = end;
+					myThis->broadcast(start, end-start+1);
+					start = ++end;
 				}
-				if(start != cBuffer)
-					strcpy(cBuffer, start);
 				pos = dwRead - (start-cBuffer);
-				myThis->log << cBuffer << _T(": ") << pos << std::endl;
+				if(start != cBuffer) {
+					cBuffer[dwRead] = '\0';
+					strcpy(cBuffer, start);
+					cBuffer[pos] = '\0';
+				}
+				//myThis->log << _T("pos: ") << pos << _T(" read: ") << dwRead << std::endl;
 			}
 		} else {
 			Sleep(100);

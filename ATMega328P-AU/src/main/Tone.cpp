@@ -17,6 +17,9 @@ Tone::Tone(int8_t volume) : volume_(volume) {
 }
 
 void Tone::beep(uint32_t frequency){
+  if(abs(this->frequency - frequency) < 80)
+    return;
+  this->frequency = frequency;  
   if (frequency == NOTONEAC || volume_ == 0) { 
     TCCR1B  = _BV(CS11);                              // Default clock prescaler of 8.
     TCCR1A  = _BV(WGM10);                             // Set to defaults so PWM can work like normal (PWM, phase corrected, 8bit).

@@ -32,6 +32,7 @@
 #define IDC_BUTTON_SAVE                 1009
 #define IDC_SLIDER_DWBARR               1010
 #define IDC_SLIDER_UPBARR               1011
+#define IDC_SLIDER_SENSI                1012
 #define IDC_BUTTON_CLOSE                1015
 
 // Next default values for new objects

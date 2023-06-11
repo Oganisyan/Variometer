@@ -54,6 +54,7 @@ CAutoRunCEDlg::CAutoRunCEDlg(CWnd* pParent)
 	}
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	hEvent = CreateEvent(NULL, TRUE, FALSE, _T("HW_BT_POWER_UP"));	
+
 	InitChildProcess();
 }
 
@@ -101,9 +102,7 @@ BOOL CAutoRunCEDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Groﬂes Symbol verwenden
 	SetIcon(m_hIcon, FALSE);		// Kleines Symbol verwenden
 
-	int pos=(int) reg.RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Volume"), 0);
-	log << "Sound: " << pos << std::endl;
-
+	int sound =(int) reg.RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Volume"), 0);
 
 	mButtonLock.EnableWindow(xcSoarWnd != NULL); 
 	mButtonLock.SetBitMap(IDB_BITMAP_UNLOCK);
@@ -115,7 +114,7 @@ BOOL CAutoRunCEDlg::OnInitDialog()
 	mButtonOff.SetBitMap(IDB_BITMAP_OFF);
 	mButtonSetup.SetBitMap(IDB_BITMAP_SETUP);
 	mSliderCtrl.SetRange(0, 9, TRUE);
-	mSliderCtrl.SetPos(pos);
+	mSliderCtrl.SetPos(sound);
 
 	OnBnClickedButtonXcsoar();
 
@@ -292,6 +291,21 @@ void CAutoRunCEDlg::OnBnClickedButtonXcsoar()
 	mButtonBikeNavi.EnableWindow(TRUE);
 	mButtonXCSoar.EnableWindow(FALSE);
 	mButtonWindows.EnableWindow(TRUE);
+
+	int sound =(int) reg.RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Volume"), 0);
+	SendSerial(volCtrlCmds[sound]);
+	log << "Sound: " << sound << std::endl;
+
+	int upBarr = (int) (reg.RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("UpBarr"), 0)/50);
+	VarioSettingDlg::sendCmd(server, "UpBarr", upBarr);
+	log << "UpBarr: " << upBarr << std::endl;
+	int dwBarr = (int) (reg.RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("DwBarr"), 100) / 50);
+	VarioSettingDlg::sendCmd(server, "DwBarr", dwBarr);
+	log << "DwBarr: " << dwBarr << std::endl;
+	int sensi = (int) (reg.RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Sensi"), 40)/20);
+	VarioSettingDlg::sendCmd(server, "Sensi", sensi);
+	log << "Sensi: " << sensi << std::endl;
+
 }
 
 void CAutoRunCEDlg::OnBnClickedButtonWindows()

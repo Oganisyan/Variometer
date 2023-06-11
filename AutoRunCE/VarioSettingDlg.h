@@ -13,13 +13,14 @@ class VarioSettingDlg : public CDialog
 	CWinReg &reg;
 	SocketServer &server;
 
+	DWORD origSensi;
 	DWORD origUpBarr;
 	DWORD origDwBarr;
 
 public:
 	VarioSettingDlg(CWinReg &refReg, SocketServer &pServer, CWnd* pParent = NULL);   // Standardkonstruktor
 	virtual ~VarioSettingDlg();
-	void sendCmd(const char *cmdId, int value);
+	void static sendCmd(SocketServer &server, const char *cmdId, int value);
 
 // Dialogfelddaten
 	enum { IDD = IDD_VARIOCONFIG_DIALOG };
@@ -45,4 +46,6 @@ public:
 	CSliderCtrl mSliderSimCtrl;
 	afx_msg void OnBnClickedButtonMm();
 	afx_msg void OnBnClickedButtonPp();
+	CSliderCtrl mSliderSensiCtrl;
+	afx_msg void OnNMCustomdrawSliderSensi(NMHDR *pNMHDR, LRESULT *pResult);
 };

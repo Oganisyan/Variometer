@@ -26,6 +26,7 @@
 class Tone {
   
   int8_t volume_;
+  uint32_t frequency;
 
   public:
     Tone(int8_t volume = NOTONEAC);
