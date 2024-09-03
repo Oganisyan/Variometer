@@ -106,6 +106,7 @@ void setup() {
 }
 
 void loop() {  // run over and over
+  static boolean run = true;
   reader.loop();
   if(reader.hasLine()) {
     String cmd = reader.getLine();
@@ -138,6 +139,18 @@ void loop() {  // run over and over
       int startIndex = 4;
       while(!isgraph(cmd[startIndex])) startIndex++;
       sim = cmd.substring(startIndex, cmd.indexOf('*')).toInt()*1.6F;
+    } else if(cmd.startsWith("$?")) {
+      static const char *info =
+    		  "$BVL value*   - set beep value (0 <-> 10)\n"\
+    		  "$BUP barrier* - set up barrier (0=0,25m/s <-> 400=7m/s)\n"\
+    		  "$BDW barrier* - set down barrier (0=0,25m/s <-> 400=7m/s)\n"\
+    		  "$SEN sensy*   - set sensitivity (0 <-> 5)\n"\
+    		  "$SIM sim*     - simulate set down barrier (-600 <-> 600)\n"\
+    		  "$?            - print cmds\n\n"\
+	          "send again: $? to run\n";
+	  if(run)
+		Serial.write(info);
+	  run = !run;
     }
   }
   
@@ -162,7 +175,8 @@ void loop() {  // run over and over
     } else {
       myTone.beep(0);
     }
-    sendPressure(p);
+    if(run)
+      sendPressure(p);
   }
 }
 
