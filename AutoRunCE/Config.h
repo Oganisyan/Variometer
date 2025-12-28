@@ -15,16 +15,17 @@
 
 
 const std::wstring	SENSOR_VOLCMD[] = {
+	std::wstring(_T("$BVL 0*")), 
 	std::wstring(_T("$BVL 1*")), 
 	std::wstring(_T("$BVL 2*")), 
-	std::wstring(_T("$BVL 10*")), 
-	std::wstring(_T("$BVL 20*")), 
-	std::wstring(_T("$BVL 40*")), 
-	std::wstring(_T("$BVL 75*")),
-	std::wstring(_T("$BVL 100*")),
-	std::wstring(_T("$BVL 200*")),
-	std::wstring(_T("$BVL 500*")), 
-	std::wstring(_T("$BVL 1000*"))
+	std::wstring(_T("$BVL 3*")), 
+	std::wstring(_T("$BVL 4*")), 
+	std::wstring(_T("$BVL 5*")), 
+	std::wstring(_T("$BVL 6*")),
+	std::wstring(_T("$BVL 7*")),
+	std::wstring(_T("$BVL 8*")),
+	std::wstring(_T("$BVL 9*")), 
+	std::wstring(_T("$BVL 10*"))
 };
 
 

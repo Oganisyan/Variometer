@@ -98,7 +98,7 @@ void VarioSettingDlg::OnBnClickedButtonSave()
 	}
 
 	sendCmd(server, "SIM", 0);
-
+	sendCmd(server, "UPD", 0);
 	CDialog::EndDialog(0);
 }
 
@@ -109,6 +109,7 @@ void VarioSettingDlg::OnBnClickedButtonCancel()
 	sendCmd(server, "BDW", origDwBarr/50);
 	sendCmd(server, "SEN", origSensi/20);
 	sendCmd(server, "SIM", 0);
+	sendCmd(server, "UPD", 0);
 	CDialog::EndDialog(0);
 }
 

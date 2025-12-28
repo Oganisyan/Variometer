@@ -7,7 +7,7 @@
 #include "Tone.h"
 
 
-uint8_t _tAC_volume[] = { 200, 100, 67, 50, 40, 33, 29, 22, 10, 2 }; // Duty for linear volume control.
+uint8_t _tAC_volume[] = { 255, 223, 191, 159, 127, 63, 31, 15, 4, 2 }; // Duty for linear volume control.
 
 
 
@@ -24,10 +24,8 @@ void Tone::beep(uint32_t frequency){
     TCCR1B  = _BV(CS11);                              // Default clock prescaler of 8.
     TCCR1A  = _BV(WGM10);                             // Set to defaults so PWM can work like normal (PWM, phase corrected, 8bit).
     PWMT1PORT &= ~_BV(PWMT1AMASK);                    // Set timer 1 PWM pins to LOW.
-//    PWMT1PORT &= ~_BV(PWMT1BMASK);                    // Other timer 1 PWM pin also to LOW.
   } else {
-    PWMT1DREG |= _BV(PWMT1AMASK) /*| _BV(PWMT1BMASK)*/;   // Set timer 1 PWM pins to OUTPUT (because analogWrite does it too).
-  
+    PWMT1DREG |= _BV(PWMT1AMASK);                     // Set timer 1 PWM pins to OUTPUT (because analogWrite does it too).
     uint8_t prescaler = _BV(CS10);                    // Try using prescaler 1 first.
     uint32_t top = F_CPU / frequency / 2 - 1;    // Calculate the top.
     if (top > 65535) {                                // If not in the range for prescaler 1, use prescaler 256 (122 Hz and lower @ 16 MHz).

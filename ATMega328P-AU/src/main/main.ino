@@ -2,6 +2,7 @@
 #include <Wire.h>
 #include "Tone.h"
 #include "Reader.h"
+#include "Config.h"
 #include <avr/wdt.h>
 
 #include "MS5611.h"
@@ -24,14 +25,17 @@ int16_t ddsAcc;
 MS5611 ms5611(Wire);
 Tone   myTone;
 Reader reader(Serial);
+Config config;
 
 
-void sensitivity (int p) {
-  p =  constrain(p, 0, 5); 
-  P1 = (5.F+ p)/50;
+
+void sensitivity (int sensi) {
+  sensi =  constrain(sensi, SEN_MIN, SEN_MAX);
+  P1 = (5.F+ sensi)/50;
   P2 = P1 / 2;
   P3 = 500.F * P1;
   P4 = P3 * P1;
+  config.setSensi(sensi);
 }
 
 void printBr() {
@@ -47,15 +51,24 @@ void printBr() {
 
 // up barrier m/s*100
 void setUpBarrier(int up_100) {
-  up_100 = constrain(up_100, 0, 400);
+  up_100 = constrain(up_100, UP_MIN, UP_MAX);
   upBarrier=max(25.F, 1.6F*up_100);
   upMax=upBarrier+600.F;
+  config.setUp100(up_100);
 }
 // down barrier m/s*100
 void setDownBarrier(int down_100) {
-  down_100 = constrain(down_100, 0, 400);
+  down_100 = constrain(down_100, DW_MIN, DW_MAX);
   dwBarrier=min(-25.F, -1.6F*down_100);
   dwMax=dwBarrier-200.F;
+  config.setDown100(down_100);
+}
+
+void setVolume(int volume) {
+  volume = constrain(volume, VOL_MIN, VOL_MAX);
+  myTone.setVolume(volume);
+  config.setVolume(volume);
+  myTone.beep(NOTONEAC);
 }
 
 float calibrate(float freq)
@@ -88,7 +101,7 @@ void setup() {
   digitalWrite(RESET_PIN,HIGH);
   Serial.begin(57600);
   ms5611.begin();
-  sensitivity(3);
+  sensitivity(config.getSensi());
   while(!ms5611.isReady()) {
     ms5611.loop();
     Serial.print(".");
@@ -98,11 +111,9 @@ void setup() {
   pressure = ((double)ms5611.getPressure());
   lowpassFast = lowpassSlow = pressure;
   toneFreqLowpass = 0;
-  myTone.setVolume(0);
-  setUpBarrier(25);
-  setDownBarrier(100);
-  
-
+  setVolume(config.getVolume());
+  setUpBarrier(config.getUp100());
+  setDownBarrier(config.getDown100());
 }
 
 void loop() {  // run over and over
@@ -114,7 +125,7 @@ void loop() {  // run over and over
       int startIndex = 4;
       while(!isgraph(cmd[startIndex])) startIndex++;
       int value = cmd.substring(startIndex, cmd.indexOf('*')).toInt();
-      myTone.setVolume(value);
+      setVolume(value);
     } else if(cmd.startsWith("$BUP") && cmd.indexOf('*') > 0 ) {
       int startIndex = 4;
       while(!isgraph(cmd[startIndex])) startIndex++;
@@ -130,6 +141,8 @@ void loop() {  // run over and over
       while(!isgraph(cmd[startIndex])) startIndex++;
       int value = cmd.substring(startIndex, cmd.indexOf('*')).toInt();
       hardwareReset(value*1000);
+    } else if(cmd.startsWith("$UPD") && cmd.indexOf('*') > 0 ) {
+      config.save();
     } else if(cmd.startsWith("$SEN") && cmd.indexOf('*') > 0 ) {
       int startIndex = 4;
       while(!isgraph(cmd[startIndex])) startIndex++;
@@ -139,18 +152,31 @@ void loop() {  // run over and over
       int startIndex = 4;
       while(!isgraph(cmd[startIndex])) startIndex++;
       sim = cmd.substring(startIndex, cmd.indexOf('*')).toInt()*1.6F;
-    } else if(cmd.startsWith("$?")) {
-      static const char *info =
-    		  "$BVL value*   - set beep value (0 <-> 10)\n"\
-    		  "$BUP barrier* - set up barrier (0=0,25m/s <-> 400=7m/s)\n"\
-    		  "$BDW barrier* - set down barrier (0=0,25m/s <-> 400=7m/s)\n"\
-    		  "$SEN sensy*   - set sensitivity (0 <-> 5)\n"\
-    		  "$SIM sim*     - simulate set down barrier (-600 <-> 600)\n"\
-    		  "$?            - print cmds\n\n"\
-	          "send again: $? to run\n";
-	  if(run)
-		Serial.write(info);
-	  run = !run;
+    } else if(cmd.startsWith("$?") || cmd.indexOf('*') > 0 ) {
+      run = !run;
+      if(!run) {
+  	    Serial.flush();
+	    char buffer[16];
+		sprintf(buffer, "$BVL %d*", config.getVolume());
+		Serial.println(buffer);
+		sprintf(buffer, "$BUP %d*", config.getUp100());
+		Serial.println(buffer);
+		sprintf(buffer, "$BDW %d*", config.getDown100());
+		Serial.println(buffer);
+		sprintf(buffer, "$SEN %d*", config.getSensi());
+		Serial.println(buffer);
+		Serial.println();
+		Serial.println("Information:");
+		Serial.println("\t$BVL value*   - set beep value (0 <-> 10)");
+		Serial.println("\t$BUP barrier* - set up barrier (0=0,25m/s <-> 400=7m/s)");
+		Serial.println("\t$BDW barrier* - set down barrier (0=0,25m/s <-> 400=7m/s)");
+		Serial.println("\t$SEN sensy*   - set sensitivity (0 <-> 5)");
+		Serial.println("\t$UPD *        - save config to flash");
+		Serial.println("\t$SIM sim*     - simulate set down barrier (-600 <-> 600)");
+		Serial.println("\t$? *          - print this");
+		Serial.println();
+		Serial.println("send again: $? * to run");
+      }
     }
   }
   

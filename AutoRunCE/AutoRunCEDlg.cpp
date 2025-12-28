@@ -113,7 +113,7 @@ BOOL CAutoRunCEDlg::OnInitDialog()
 	mButtonXCSoar.SetBitMap(IDB_BITMAP_XCSOAR);
 	mButtonOff.SetBitMap(IDB_BITMAP_OFF);
 	mButtonSetup.SetBitMap(IDB_BITMAP_SETUP);
-	mSliderCtrl.SetRange(0, 9, TRUE);
+	mSliderCtrl.SetRange(0, 10, TRUE);
 	mSliderCtrl.SetPos(sound);
 
 	OnBnClickedButtonXcsoar();
