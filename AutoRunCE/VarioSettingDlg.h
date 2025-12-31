@@ -11,16 +11,19 @@ class VarioSettingDlg : public CDialog
 {
 	DECLARE_DYNAMIC(VarioSettingDlg)
 	CWinReg &reg;
-	SocketServer &server;
-
-	DWORD origSensi;
-	DWORD origUpBarr;
-	DWORD origDwBarr;
+    Config &cfg_;
+	SocketServer &server_;
+	int currentValue_;
+	static void initSlider(int min, int max, int step, int pos, CSliderCtrl &ctrl) {
+		ctrl.SetRange(min, max, TRUE);
+		ctrl.SetPageSize(step);
+		ctrl.SetLineSize(step);
+		ctrl.SetPos(pos);
+	}
 
 public:
-	VarioSettingDlg(CWinReg &refReg, SocketServer &pServer, CWnd* pParent = NULL);   // Standardkonstruktor
+	VarioSettingDlg(CWinReg &refReg, Config &pCfg, SocketServer &pServer, int value,CWnd* pParent = NULL);   // Standardkonstruktor
 	virtual ~VarioSettingDlg();
-	void static sendCmd(SocketServer &server, const char *cmdId, int value);
 
 // Dialogfelddaten
 	enum { IDD = IDD_VARIOCONFIG_DIALOG };

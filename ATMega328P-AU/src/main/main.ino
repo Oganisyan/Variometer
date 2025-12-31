@@ -117,7 +117,7 @@ void setup() {
 }
 
 void loop() {  // run over and over
-  static boolean run = true;
+  static unsigned long delayUntilMillis= 0L;
   reader.loop();
   if(reader.hasLine()) {
     String cmd = reader.getLine();
@@ -153,30 +153,27 @@ void loop() {  // run over and over
       while(!isgraph(cmd[startIndex])) startIndex++;
       sim = cmd.substring(startIndex, cmd.indexOf('*')).toInt()*1.6F;
     } else if(cmd.startsWith("$?") || cmd.indexOf('*') > 0 ) {
-      run = !run;
-      if(!run) {
-  	    Serial.flush();
-	    char buffer[16];
-		sprintf(buffer, "$BVL %d*", config.getVolume());
-		Serial.println(buffer);
-		sprintf(buffer, "$BUP %d*", config.getUp100());
-		Serial.println(buffer);
-		sprintf(buffer, "$BDW %d*", config.getDown100());
-		Serial.println(buffer);
-		sprintf(buffer, "$SEN %d*", config.getSensi());
-		Serial.println(buffer);
-		Serial.println();
-		Serial.println("Information:");
-		Serial.println("\t$BVL value*   - set beep value (0 <-> 10)");
-		Serial.println("\t$BUP barrier* - set up barrier (0=0,25m/s <-> 400=7m/s)");
-		Serial.println("\t$BDW barrier* - set down barrier (0=0,25m/s <-> 400=7m/s)");
-		Serial.println("\t$SEN sensy*   - set sensitivity (0 <-> 5)");
-		Serial.println("\t$UPD *        - save config to flash");
-		Serial.println("\t$SIM sim*     - simulate set down barrier (-600 <-> 600)");
-		Serial.println("\t$? *          - print this");
-		Serial.println();
-		Serial.println("send again: $? * to run");
-      }
+      delayUntilMillis = millis() + 10000L;;
+      Serial.flush();
+      char buffer[16];
+      sprintf(buffer, "$BVL %d*", config.getVolume());
+      Serial.println(buffer);
+      sprintf(buffer, "$BUP %d*", config.getUp100());
+      Serial.println(buffer);
+      sprintf(buffer, "$BDW %d*", config.getDown100());
+      Serial.println(buffer);
+      sprintf(buffer, "$SEN %d*", config.getSensi());
+      Serial.println(buffer);
+      Serial.println();
+      Serial.println("Information:");
+      Serial.println("\t$BVL value*   - set beep value (0 <-> 10)");
+      Serial.println("\t$BUP barrier* - set up barrier (0=0,25m/s <-> 400=7m/s)");
+      Serial.println("\t$BDW barrier* - set down barrier (0=0,25m/s <-> 400=7m/s)");
+      Serial.println("\t$SEN sensy*   - set sensitivity (0 <-> 5)");
+      Serial.println("\t$UPD *        - save config to flash");
+      Serial.println("\t$SIM sim*     - simulate set down barrier (-600 <-> 600)");
+      Serial.println("\t$? *          - print this");
+      Serial.println();
     }
   }
   
@@ -201,7 +198,7 @@ void loop() {  // run over and over
     } else {
       myTone.beep(0);
     }
-    if(run)
+    if(delayUntilMillis < millis())
       sendPressure(p);
   }
 }

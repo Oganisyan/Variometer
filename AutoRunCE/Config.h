@@ -1,3 +1,5 @@
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
 #pragma once
 #include <map>
 #include <string>
@@ -14,19 +16,15 @@
 #define XC_SOAR_WIN_NAME	_T("XCSoarMain")
 
 
-const std::wstring	SENSOR_VOLCMD[] = {
-	std::wstring(_T("$BVL 0*")), 
-	std::wstring(_T("$BVL 1*")), 
-	std::wstring(_T("$BVL 2*")), 
-	std::wstring(_T("$BVL 3*")), 
-	std::wstring(_T("$BVL 4*")), 
-	std::wstring(_T("$BVL 5*")), 
-	std::wstring(_T("$BVL 6*")),
-	std::wstring(_T("$BVL 7*")),
-	std::wstring(_T("$BVL 8*")),
-	std::wstring(_T("$BVL 9*")), 
-	std::wstring(_T("$BVL 10*"))
-};
+#define BVL		"$BVL %d*"
+#define SIM		"$SIM %d*"
+#define BUP		"$BUP %d*"
+#define BDW		"$BDW %d*"
+#define SEN		"$SEN %d*"
+#define UPD		"$UPD *"
+#define GET		"$? *"
+
+#define CRNL(x)	x"\n"
 
 
 enum FileType  {
@@ -39,17 +37,35 @@ std::wstring getFileNameFor(FileType type);
 std::wstring itows(int  val);
 
 #define CFG(x, y) x.get(_T(#y), y)
-#define CFG_LIST_ITEM(x, y, z) x.get(_T(#y), z, y)
+#define CFG_LIST_ITEM(x, y, z) x.get(_T(#y), z, y, sizeof(y))
 #define CFG_LIST_COUNT(x, y) x.get(_T(#y)##_T("_COUNT"), itows(sizeof(y) / sizeof(std::wstring)))
 
 class Config : private std::map<std::wstring,std::wstring>
 {
 	std::wofstream &log_;
 	void initConfig();
+	int sensi_;
+	int volume_;
+	int barrUp_;
+	int barrDw_;
+	HANDLE hEventReciveData;
+ 
 public:
 	Config(std::wofstream &log);
 	~Config();
+	HANDLE getHandleEventReciveData() {return hEventReciveData;}
+	void parse(const char *data, int len);
 	const std::wstring& get(const std::wstring &key, const std::wstring &defValue) const;
-	const std::wstring& get(const std::wstring &key, int pos, const std::wstring defValues[]) const;
-};
+	const std::wstring& get(const std::wstring &key_prefix, int pos, const std::wstring defValues[], int defValuesSize) const;
+	int getVolume() const { return volume_;}
+	int getSensi() const { return sensi_;}
+	int getBarrUp() const { return barrUp_;}
+	int getBarrDw() const { return barrDw_;}
 
+	void setVolume(int volume) { volume_ = volume;}
+	void setSensi(int sensi)   { sensi_  = sensi;}
+	void setBarrUp(int barrUp) { barrUp_ = barrUp;}
+	void setBarrDw(int barrDw) { barrDw_ = barrDw;}
+
+};
+#endif //_CONFIG_H_

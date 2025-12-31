@@ -23,10 +23,6 @@ extern "C" BOOL KernelIoControl(DWORD dwIoControlCode,  LPVOID lpInBuf,  DWORD n
   LPVOID lpOutBuf,  DWORD nOutBufSize,  LPDWORD lpBytesReturned);
 
 
-std::vector<std::wstring> volCtrlCmds;
-
-
-
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -34,27 +30,18 @@ std::vector<std::wstring> volCtrlCmds;
 // CAutoRunCEDlg-Dialogfeld
 
 CAutoRunCEDlg::CAutoRunCEDlg(CWnd* pParent)
-	: CDialog(CAutoRunCEDlg::IDD, pParent), 
-	log(getFileNameFor(LOG).c_str()),
-	reg(log),
-	cfg_(log),
+	: CDialog(CAutoRunCEDlg::IDD, pParent),
+	log_(getFileNameFor(LOG).c_str()),
+	reg(log_),
+	cfg_(log_),
 	bScreanLocked(true), 
 	displayOrientation(DMDO_0),
-	server(cfg_, log)
+	server_(cfg_, log_)
 
 {
 	xcSoarWinName = CFG(cfg_, XC_SOAR_WIN_NAME);
-	int volCtrlCmdCount = _wtoi(CFG_LIST_COUNT(cfg_,SENSOR_VOLCMD).c_str());
-	log << _T("VolCtrl Cmd Count: ") << volCtrlCmdCount  << std::endl;
-
-	volCtrlCmds.resize(volCtrlCmdCount);
-	for(int i=0; i < volCtrlCmdCount; i++) {
-		volCtrlCmds[i] = CFG_LIST_ITEM(cfg_, SENSOR_VOLCMD, i);
-		log << _T("\t Cmd ") << i << _T(": ")   << volCtrlCmds[i]  << std::endl;
-	}
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
-	hEvent = CreateEvent(NULL, TRUE, FALSE, _T("HW_BT_POWER_UP"));	
-
+	hEvent =  CreateEvent(NULL, TRUE, FALSE, _T("HW_BT_POWER_UP"));	
 	InitChildProcess();
 }
 
@@ -102,8 +89,6 @@ BOOL CAutoRunCEDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Großes Symbol verwenden
 	SetIcon(m_hIcon, FALSE);		// Kleines Symbol verwenden
 
-	int sound =(int) reg.RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Volume"), 0);
-
 	mButtonLock.EnableWindow(xcSoarWnd != NULL); 
 	mButtonLock.SetBitMap(IDB_BITMAP_UNLOCK);
 	mButtonRotate.SetBitMap(IDB_BITMAP_ROTATE);
@@ -113,8 +98,9 @@ BOOL CAutoRunCEDlg::OnInitDialog()
 	mButtonXCSoar.SetBitMap(IDB_BITMAP_XCSOAR);
 	mButtonOff.SetBitMap(IDB_BITMAP_OFF);
 	mButtonSetup.SetBitMap(IDB_BITMAP_SETUP);
+	mSliderCtrl.SetPageSize(1);
+	mSliderCtrl.SetLineSize(1);
 	mSliderCtrl.SetRange(0, 10, TRUE);
-	mSliderCtrl.SetPos(sound);
 
 	OnBnClickedButtonXcsoar();
 
@@ -124,17 +110,7 @@ BOOL CAutoRunCEDlg::OnInitDialog()
 
 void CAutoRunCEDlg::OnBnClickedButtonOff()
 {
-	mSliderCtrl.UpdateData(TRUE);
-	int pos = (mSliderCtrl.GetPos() >= sizeof(volCtrlCmds)) ? sizeof(volCtrlCmds)-1 
-		: (mSliderCtrl.GetPos() < 0) ? 0 : mSliderCtrl.GetPos();
-
-	int posReg=(int) reg.RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Volume"), 0);
-
-	if(posReg != pos) {
-		reg.RegWriteDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Volume"), pos);
-	}
-	SendSerial(volCtrlCmds[0]);
-
+	server_.sendSerial(CRNL(BVL), 0);
 	SetSystemPowerState(NULL, POWER_STATE_SUSPEND, POWER_FORCE);
 }
 
@@ -176,6 +152,7 @@ void CAutoRunCEDlg::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 
 void CAutoRunCEDlg::OnTimer(UINT_PTR nIDEvent)
 {
+	
 	if(WaitForSingleObject(hChildProcess,20)==WAIT_OBJECT_0) {
 		mButtonBikeNavi.EnableWindow(TRUE);
 		mButtonXCSoar.EnableWindow(TRUE);
@@ -187,6 +164,10 @@ void CAutoRunCEDlg::OnTimer(UINT_PTR nIDEvent)
 			ShowWindow(SW_SHOW);
 			SetForegroundWindow();
 			SetTimer(2, 10000, NULL);
+		} else if(WaitForSingleObject(cfg_.getHandleEventReciveData(),20)==WAIT_OBJECT_0){
+			ResetEvent(cfg_.getHandleEventReciveData());
+			log_ << _T("mSliderCtrl.SetPos(")<< cfg_.getVolume() << _T(")") << std::endl;
+			mSliderCtrl.SetPos(cfg_.getVolume());
 		}
 	}else if(nIDEvent == 2) {
 		KillTimer(nIDEvent);
@@ -271,9 +252,9 @@ HANDLE  CAutoRunCEDlg::GetProcessHandle(LPCWSTR szProcessName)
 
 void CAutoRunCEDlg::OnBnClickedButtonBikeNavi()
 {
+	server_.sendSerial(CRNL(BVL), 0);
 	TerminateProcess(hChildProcess, 0);
-
-	server.CloseSerialPort();
+	server_.CloseSerialPort();
 	hChildProcess = CreateProcess(CFG(cfg_, BIKE_NAV_PATH).c_str());
 	mButtonBikeNavi.EnableWindow(FALSE);
 	mButtonXCSoar.EnableWindow(TRUE);
@@ -286,33 +267,19 @@ void CAutoRunCEDlg::OnBnClickedButtonXcsoar()
 {
 	TerminateProcess(hChildProcess, 0);
 
-	server.OpenSerialPort();
+	server_.OpenSerialPort();
 	hChildProcess = CreateProcess(CFG(cfg_, XC_SOAR_PATH).c_str());
 	mButtonBikeNavi.EnableWindow(TRUE);
 	mButtonXCSoar.EnableWindow(FALSE);
 	mButtonWindows.EnableWindow(TRUE);
-
-	int sound =(int) reg.RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Volume"), 0);
-	SendSerial(volCtrlCmds[sound]);
-	log << "Sound: " << sound << std::endl;
-
-	int upBarr = (int) (reg.RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("UpBarr"), 0)/50);
-	VarioSettingDlg::sendCmd(server, "UpBarr", upBarr);
-	log << "UpBarr: " << upBarr << std::endl;
-	int dwBarr = (int) (reg.RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("DwBarr"), 100) / 50);
-	VarioSettingDlg::sendCmd(server, "DwBarr", dwBarr);
-	log << "DwBarr: " << dwBarr << std::endl;
-	int sensi = (int) (reg.RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Sensi"), 40)/20);
-	VarioSettingDlg::sendCmd(server, "Sensi", sensi);
-	log << "Sensi: " << sensi << std::endl;
-
 }
 
 void CAutoRunCEDlg::OnBnClickedButtonWindows()
 {
+	server_.sendSerial(CRNL(BVL), 0);
 	TerminateProcess(hChildProcess, 0);
 
-	server.CloseSerialPort();
+	server_.CloseSerialPort();
 	hChildProcess = CreateProcess(CFG(cfg_, WIN_EXPLORER_PATH).c_str());
 	mButtonBikeNavi.EnableWindow(TRUE);
 	mButtonXCSoar.EnableWindow(TRUE);
@@ -320,30 +287,19 @@ void CAutoRunCEDlg::OnBnClickedButtonWindows()
 
 }
 
-void CAutoRunCEDlg::SendSerial(const std::wstring &wsCmd)
-{
-	std::string cmd;
-	cmd.resize(wsCmd.size() * sizeof(wchar_t) / sizeof(char) + 2);
-	int len = wcstombs(&cmd[0], wsCmd.c_str(), wsCmd.size() * sizeof(wchar_t) / sizeof(char));
-	cmd[len++] = '\r';
-	cmd[len++] = '\n';
-	server.serialSend(cmd.c_str(), len);
-}
 
 void CAutoRunCEDlg::OnNMCustomdrawSliderSound(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	
 	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
-	int pos = (mSliderCtrl.GetPos() >= sizeof(volCtrlCmds)) ? sizeof(volCtrlCmds)-1 
-		: (mSliderCtrl.GetPos() < 0) ? 0 : mSliderCtrl.GetPos();
-	SendSerial(volCtrlCmds[pos]);
+	int pos =  mSliderCtrl.GetPos();
+	server_.sendSerial(CRNL(BVL), pos);
 	*pResult = 0;
 }
 
 
 void CAutoRunCEDlg::OnBnClickedButtonRotate()
 {
-#if 1
 	CRect rc;
 	GetWindowRect(&rc); // getting dialog coordinates
 
@@ -359,31 +315,13 @@ void CAutoRunCEDlg::OnBnClickedButtonRotate()
 	devMode.dmDisplayOrientation = displayOrientation;
 
 
-	if (DISP_CHANGE_SUCCESSFUL != ChangeDisplaySettingsEx(NULL, 
-		&devMode, NULL, CDS_RESET, NULL)) {
-			log << _T("Can't Rotate display: ") << GetLastError() << std::endl;
+	if (DISP_CHANGE_SUCCESSFUL != ChangeDisplaySettingsEx(NULL, &devMode, NULL, CDS_RESET, NULL)) {
+		log_ << _T("Can't Rotate display: ") << GetLastError() << std::endl;
 	} else {
-		log << _T("Display Rotation OK, Orientation: ") << devMode.dmDisplayOrientation << std::endl;
+		log_ << _T("Display Rotation OK, Orientation: ") << devMode.dmDisplayOrientation << std::endl;
 	}
 
 	MoveWindow(rc.top, rc.left, rc.Width(), rc.Height());
-#else 
-	HKEY hKey;
-	if(ERROR_SUCCESS==RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Drivers\\BuiltIn\\BackLight"),0,0,&hKey))
-    {
-		DWORD dwBklLevel = 100;
-       	RegSetValueEx(hKey, _T("Brightness"),0,REG_DWORD,(BYTE*)&dwBklLevel,sizeof(DWORD));
-		dwBklLevel = 50;
-       	RegSetValueEx(hKey, _T("CurrentDx"),0,REG_DWORD,(BYTE*)&dwBklLevel,sizeof(DWORD));
-		RegCloseKey(hKey);
-		HANDLE hBL=CreateEvent(NULL,FALSE,FALSE, _T("EventModify"));
-		if(hBL)
-		{
-			SetEvent(hBL);
-			CloseHandle(hBL);
-		}
-	}
-#endif
 }
 
 
@@ -391,6 +329,6 @@ void CAutoRunCEDlg::OnBnClickedButtonVario()
 {
 	INT_PTR rc; 
 	ShowWindow(SW_HIDE); 
-	VarioSettingDlg dlg(reg, server);
+	VarioSettingDlg dlg(reg, cfg_, server_, mSliderCtrl.GetPos());
 	rc = dlg.DoModal();
 }

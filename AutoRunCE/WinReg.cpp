@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "WinReg.h"
 
-CWinReg::CWinReg(std::wofstream& pLog) : log(pLog)
+CWinReg::CWinReg(std::wofstream& pLog) : log_(pLog)
 {
 }
 
@@ -23,7 +23,7 @@ void CWinReg::RegWrite(HKEY key, wchar_t *subKey, wchar_t* name, DWORD type, LPB
 		{ 
 			if(ERROR_SUCCESS != RegSetValueEx(hKey, name, 0, type, data, size))
 			{
-				log << _T("RegSetValueEx: ") << GetLastError() << std::endl;
+				log_ << _T("RegSetValueEx: ") << GetLastError() << std::endl;
 			} 
 		 
 			RegCloseKey (hKey); 
@@ -44,7 +44,7 @@ void CWinReg::RegRead(HKEY key, wchar_t *subKey, wchar_t* name, DWORD &type, LPB
 	{ 
 		if(ERROR_SUCCESS != RegQueryValueEx(hKey, name, 0, &type, data, &size))
 		{
-			log << _T("RegQueryValueEx: ") << key << _T(" : ") << name << _T(" : ")<< GetLastError() << std::endl;
+			log_ << _T("RegQueryValueEx: ") << key << _T(" : ") << name << _T(" : ")<< GetLastError() << std::endl;
 		} 
 	 
 		RegCloseKey (hKey); 
@@ -62,7 +62,7 @@ LSTATUS CWinReg::RegOpenKey(HKEY key, wchar_t *subKey, REGSAM mask, HKEY &hKey) 
 		funcName = _T("RegCreateKeyEx: ");
 	}
 	if(status != ERROR_SUCCESS) {
-			log << funcName << error << std::endl;
+			log_ << funcName << error << std::endl;
 	}
 	return status;
 }

@@ -47,9 +47,9 @@ protected:
 	MyButton mButtonWindows;
 	MyButton mButtonRotate;
 	MyButton mButtonSetup;
-	std::wofstream log;
+	std::wofstream log_;
 	Config cfg_;
-	SocketServer server;
+	SocketServer server_;
 	std::wstring xcSoarWinName;
 
 	// Generierte Funktionen für die Meldungstabellen
@@ -71,7 +71,6 @@ public:
 	afx_msg void OnBnClickedButtonRotate();
 
 private:
-	void SendSerial(const std::wstring &wsCmd);
 	HANDLE hEvent;
 	CWnd *xcSoarWnd;
 	bool bScreanLocked;

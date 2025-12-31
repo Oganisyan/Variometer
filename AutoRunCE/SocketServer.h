@@ -12,7 +12,7 @@ class SocketServer
 	std::wstring sensorPort_;
 	unsigned int bitRate_;
 	int socket_;
-	std::wofstream &log;
+	std::wofstream &log_;
 	OVERLAPPED ov;
 	Config &cfg_;
 
@@ -20,7 +20,7 @@ class SocketServer
 public:
 	SocketServer(Config &cfg, std::wofstream &pLog);
 	~SocketServer(void);
-	void serialSend(const char *data, int data_len);
+	void sendSerial(const char* format, ...);
 	void OpenSerialPort();
 	void CloseSerialPort();
 

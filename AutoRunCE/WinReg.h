@@ -4,7 +4,7 @@
 
 class CWinReg
 {
-	std::wofstream& log;
+	std::wofstream& log_;
 public:
 	CWinReg(std::wofstream& pLog);
 	~CWinReg(void);

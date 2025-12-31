@@ -5,22 +5,22 @@
 #include <string>
 
 
-SocketServer::SocketServer(Config &cfg, std::wofstream &pLog) : cfg_(cfg), log(pLog), hComm(INVALID_HANDLE_VALUE) {
+SocketServer::SocketServer(Config &cfg, std::wofstream &pLog) : cfg_(cfg), log_(pLog), hComm(INVALID_HANDLE_VALUE) {
 	udpPort_ = _wtoi(CFG(cfg_, UDP_PORT).c_str());
 	sensorPort_ = CFG(cfg_, SENSOR_PORT);
 	bitRate_ = _wtoi(CFG(cfg_, SENSOR_PORT_RATE).c_str());
-	log << _T("Start UDP Server -  port: ") << udpPort_ 
+	log_ << _T("Start UDP Server -  port: ") << udpPort_ 
 		<< _T(" SensorPort: ") << sensorPort_ << _T(" SensorSpeed: ") << bitRate_ << std::endl;
 
 	WSADATA wsaData;
 	if(WSAStartup(MAKEWORD(2 ,2), &wsaData) != 0) {
-		log << "error at WSASturtup" << GetLastError() << std::endl;
+		log_ << "error at WSASturtup" << GetLastError() << std::endl;
 	}
 
 	socket_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
 	if( socket_ < 0) {
-		log << "Can't create socket: " << GetLastError() << std::endl;
+		log_ << "Can't create socket: " << GetLastError() << std::endl;
 	}
 	int broadcast=1;
 	std::string recv;
@@ -44,13 +44,13 @@ void SocketServer::OpenSerialPort() {
 				NULL);
 
 	if( hComm  ==  INVALID_HANDLE_VALUE) {
-		log << "CreateFile COM_PORT error code: " << GetLastError()  << std::endl;
+		log_ << "CreateFile COM_PORT error code: " << GetLastError()  << std::endl;
 		return;
 	}
 	DCB dcbSerialParams = { 0 };
 	dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
 	if (GetCommState(hComm, &dcbSerialParams) == FALSE ) {
-		log << "GetCommState  error code: " << GetLastError()  << std::endl;
+		log_ << "GetCommState  error code: " << GetLastError()  << std::endl;
 		CloseSerialPort();
 		return;
 	}
@@ -63,7 +63,7 @@ void SocketServer::OpenSerialPort() {
 
 
 	if (SetCommState(hComm, &dcbSerialParams) == FALSE ) {
-		log << "SetCommState  error code: " << GetLastError()  << std::endl;
+		log_ << "SetCommState  error code: " << GetLastError()  << std::endl;
 		CloseSerialPort();
 		return;
 	}
@@ -77,7 +77,7 @@ void SocketServer::OpenSerialPort() {
 	};
 
 	if(SetCommTimeouts(hComm, &timeouts) == FALSE ) {
-		log << "SetCommTimeouts  error code: " << GetLastError()  << std::endl;
+		log_ << "SetCommTimeouts  error code: " << GetLastError()  << std::endl;
 		CloseSerialPort();
 		return;
 	}
@@ -100,11 +100,16 @@ void SocketServer::OpenSerialPort() {
 	comTimeOut.WriteTotalTimeoutConstant = 2;
 	// set the time-out parameter into device control.
 	if(!SetCommTimeouts(hComm,&comTimeOut)){
-		log << "SetCommTimeouts error code: " << GetLastError()  << std::endl;
+		log_ << "SetCommTimeouts error code: " << GetLastError()  << std::endl;
 		CloseSerialPort();
 		return;
 	}
 	memset(&ov, 0, sizeof(ov));
+
+	sendSerial(CRNL(GET));
+
+	log_ << _T("OpenSerialPort OK") << std::endl;
+
 }
 
 void SocketServer::CloseSerialPort() {
@@ -114,14 +119,19 @@ void SocketServer::CloseSerialPort() {
 	}
 }
 
-
-void SocketServer::serialSend(const char *data, int data_len)
-{
-	for(int i = 0; i < data_len; i++) {
-		char c = data[i];
-		TransmitCommChar(hComm, c);
+void SocketServer::sendSerial(const char* format, ...) {
+	char buffer[1024] ={0};
+	va_list arg;
+	va_start (arg, format);
+	vsprintf(buffer, format, arg);
+	va_end (arg);
+	int len = strlen(buffer);
+	log_ << "Send: " << buffer;
+	for(int i = 0; i < len; i++) {
+		TransmitCommChar(hComm, buffer[i]);
 	}
-};
+}
+
 
 void SocketServer::broadcast(const char *data, int len) {
 	sockaddr_in addr;
@@ -129,9 +139,11 @@ void SocketServer::broadcast(const char *data, int len) {
     addr.sin_port = htons(udpPort_);
     addr.sin_addr.s_addr = inet_addr("127.255.255.255");
 	if(sendto(socket_, data, len, 0, (const sockaddr *)&addr, sizeof(addr)) < 0) {
-		log << "Can't sendto socket: " << GetLastError() << std::endl;
+		log_ << "Can't sendto socket: " << GetLastError() << std::endl;
 	}
 }
+
+
 
 
 DWORD WINAPI SocketServer::loop( LPVOID lpParam ) 
@@ -145,7 +157,7 @@ DWORD WINAPI SocketServer::loop( LPVOID lpParam )
 			DWORD dwSize = sizeof(cBuffer) - pos - 1;
 			DWORD dwRead = 0;
 			if(!ReadFile(myThis->hComm, &cBuffer[0] + pos, dwSize, &dwRead, NULL)) {
-				myThis->log << 	_T("Error ReadFile: ") << GetLastError() << std::endl;
+				myThis->log_ << 	_T("Error ReadFile: ") << GetLastError() << std::endl;
 			} else {
 				if(dwRead == 0) {
 					Sleep(1);
@@ -156,6 +168,7 @@ DWORD WINAPI SocketServer::loop( LPVOID lpParam )
 				char *start=cBuffer;
 				char *end;
 				while((end=strchr(start, '\n')) != NULL ) {
+					myThis->cfg_.parse(start, end-start+1);
 					myThis->broadcast(start, end-start+1);
 					start = ++end;
 				}
@@ -165,7 +178,6 @@ DWORD WINAPI SocketServer::loop( LPVOID lpParam )
 					strcpy(cBuffer, start);
 					cBuffer[pos] = '\0';
 				}
-				//myThis->log << _T("pos: ") << pos << _T(" read: ") << dwRead << std::endl;
 			}
 		} else {
 			Sleep(100);

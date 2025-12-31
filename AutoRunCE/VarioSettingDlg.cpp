@@ -9,8 +9,8 @@
 
 IMPLEMENT_DYNAMIC(VarioSettingDlg, CDialog)
 
-VarioSettingDlg::VarioSettingDlg(CWinReg &pReg, SocketServer &pServer, CWnd* pParent /*=NULL*/)
-	: CDialog(VarioSettingDlg::IDD, pParent), reg(pReg), server(pServer)
+VarioSettingDlg::VarioSettingDlg(CWinReg &pReg, Config &pCfg, SocketServer &pServer, int value, CWnd* pParent /*=NULL*/)
+	: CDialog(VarioSettingDlg::IDD, pParent), reg(pReg), cfg_(pCfg), server_(pServer), currentValue_(value)
 {
 
 }
@@ -40,19 +40,10 @@ BOOL VarioSettingDlg::OnInitDialog()
 	mButtonMinus.SetBitMap(IDB_BITMAP_MINUS);
 	mButtonPlus.SetBitMap(IDB_BITMAP_PLUS);
 
-	mSliderLiftCtrl.SetRange(0, 8, TRUE);
-	mSliderSinkCtrl.SetRange(0, 8, TRUE);
-	mSliderSimCtrl.SetRange(-16, +16, TRUE);
-	mSliderSensiCtrl.SetRange(0, 5, TRUE);
-	mSliderSimCtrl.SetPos(0);
-
-
-	origSensi = reg.RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("Sensi"), 40);
-	origUpBarr = reg.RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("UpBarr"), 0);
-	origDwBarr = reg.RegReadDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  _T("DwBarr"), 100);
-	mSliderSensiCtrl.SetPos(origSensi/20);
-	mSliderLiftCtrl.SetPos(origUpBarr/50);
-	mSliderSinkCtrl.SetPos(origDwBarr/50);
+	initSlider(1,      5,  1,  cfg_.getSensi(), mSliderSensiCtrl);
+	initSlider(0,    400, 50, cfg_.getBarrUp(), mSliderLiftCtrl);
+	initSlider(0,    400, 50, cfg_.getBarrDw(), mSliderSinkCtrl);
+	initSlider(-400, 400, 50,                0, mSliderSimCtrl);
 
 	SetTimer(3, 100, NULL);
 	return TRUE;
@@ -83,81 +74,65 @@ void VarioSettingDlg::OnTimer(UINT_PTR nIDEvent)
 
 void VarioSettingDlg::OnBnClickedButtonSave()
 {
-	KillTimer(3);
-	if(origUpBarr != mSliderLiftCtrl.GetPos() *50) {
-		reg.RegWriteDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  
-			_T("UpBarr"), mSliderLiftCtrl.GetPos() *50);
-	}
-	if(origDwBarr != mSliderSinkCtrl.GetPos() *50) {
-		reg.RegWriteDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  
-			_T("DwBarr"), mSliderSinkCtrl.GetPos() *50);
-	}
-	if(origSensi != mSliderSensiCtrl.GetPos() *20) {
-		reg.RegWriteDword(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoRunCE"),  
-			_T("Sensi"), mSliderSensiCtrl.GetPos() *20);
-	}
+	KillTimer(3);	
+	server_.sendSerial(CRNL(SIM), 0);
+	server_.sendSerial(CRNL(UPD));
 
-	sendCmd(server, "SIM", 0);
-	sendCmd(server, "UPD", 0);
+	cfg_.setSensi(mSliderSensiCtrl.GetPos());
+	cfg_.setBarrUp(mSliderLiftCtrl.GetPos());
+	cfg_.setBarrDw(mSliderSinkCtrl.GetPos());
+	cfg_.setVolume(currentValue_);
+
 	CDialog::EndDialog(0);
 }
 
 void VarioSettingDlg::OnBnClickedButtonCancel()
 {
 	KillTimer(3);
-	sendCmd(server, "BUP", origUpBarr/50);
-	sendCmd(server, "BDW", origDwBarr/50);
-	sendCmd(server, "SEN", origSensi/20);
-	sendCmd(server, "SIM", 0);
-	sendCmd(server, "UPD", 0);
+	server_.sendSerial(CRNL(BUP), cfg_.getBarrUp());
+	server_.sendSerial(CRNL(BDW), cfg_.getBarrDw());
+	server_.sendSerial(CRNL(SEN), cfg_.getSensi());
+	server_.sendSerial(CRNL(SIM), 0);
+	server_.sendSerial(CRNL(UPD));
 	CDialog::EndDialog(0);
 }
 
 void VarioSettingDlg::OnNMCustomdrawSliderSound(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
-	int value = mSliderSimCtrl.GetPos() * 50;
-	sendCmd(server, "SIM", value);
+	server_.sendSerial(CRNL(SIM), mSliderSimCtrl.GetPos());
 	*pResult = 0;
 }
 
 void VarioSettingDlg::OnNMCustomdrawSliderDwbarr(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
-	int value = mSliderSinkCtrl.GetPos() * 50;
-	sendCmd(server, "BDW", value);
+	server_.sendSerial(CRNL(BDW), mSliderSinkCtrl.GetPos());
 	*pResult = 0;
 }
 
 void VarioSettingDlg::OnNMCustomdrawSliderUpbarr(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
-	int value = mSliderLiftCtrl.GetPos() * 50;
-	sendCmd(server, "BUP", value);
+	server_.sendSerial(CRNL(BUP), mSliderLiftCtrl.GetPos());
 	*pResult = 0;
 }
 
-void VarioSettingDlg::sendCmd(SocketServer &server, const char* cmdId, int value) {
-	char buffer[1024] ={0};
-	sprintf(buffer, "$%s %d*\r\n", cmdId, value);
-	server.serialSend(buffer, strlen(buffer));
-}
 void VarioSettingDlg::OnBnClickedButtonMm()
 {
-	int value = mSliderSimCtrl.GetPos() -1;
-	mSliderSimCtrl.SetPos(value);
+	int pos = max(mSliderSimCtrl.GetPos() - mSliderSimCtrl.GetPageSize(), mSliderSimCtrl.GetRangeMin());
+	mSliderSimCtrl.SetPos(pos);
 }
 
 void VarioSettingDlg::OnBnClickedButtonPp()
 {
-	int value = mSliderSimCtrl.GetPos() +1;
-	mSliderSimCtrl.SetPos(value);
+	int pos = min(mSliderSimCtrl.GetPos() + mSliderSimCtrl.GetPageSize(), mSliderSimCtrl.GetRangeMax());
+	mSliderSimCtrl.SetPos(pos);
 }
 
 void VarioSettingDlg::OnNMCustomdrawSliderSensi(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
-	int value = mSliderSensiCtrl.GetPos() * 20;
-	sendCmd(server, "SEN", value);
+	server_.sendSerial(CRNL(SEN), mSliderSensiCtrl.GetPos());
 	*pResult = 0;
 }
